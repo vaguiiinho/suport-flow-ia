@@ -135,7 +135,7 @@ Status: concluída em 6 de setembro de 2026.
 - [x] implementar listagem, filtros e detalhe para atendentes;
 - [x] implementar atualização manual de status, categoria e prioridade;
 - [~] exibir conversa e fontes relacionadas sem revelar dados indevidos; o cliente exibe fontes usadas no chat, mas o detalhe protegido para atendentes ainda será incluído no painel;
-- [ ] criar painel protegido para artigos, PDFs e ingestões;
+- [~] criar painel protegido para artigos, PDFs e ingestões; o painel autentica atendentes e exibe fontes/indexação, enquanto os formulários de gestão e reprocessamento ainda serão ampliados;
 - [ ] exibir falhas e permitir reprocessamento manual;
 - [ ] registrar trilha mínima de mudanças operacionais;
 - [~] executar o gate de saída da fase; a modelagem inicial existe, mas o fluxo de tickets e painel ainda não possui testes nem contratos;

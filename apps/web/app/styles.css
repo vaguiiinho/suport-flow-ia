@@ -133,6 +133,15 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 .confirmation input { width: auto; margin-top: 3px; }
 .confirmation-state { color: #f4ce92 !important; font-size: .9rem; }
 .error { margin: 16px 0 0; color: #ffb4b4; }
+.admin { max-width: 980px; }
+.admin h1 { font-size: clamp(2.4rem, 6vw, 4rem); }
+.admin h2 { margin-top: 36px; }
+.admin-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 16px; }
+.admin-card { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(16, 40, 68, .62); }
+.admin-card p { margin: 0; line-height: 1.45; }
+.admin-card small { color: var(--muted); }
+.admin-card label { display: grid; gap: 6px; font-size: .9rem; }
+.admin-card select { padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #091a2d; color: var(--text); font: inherit; }
 
 @media (max-width: 760px) {
   main {
