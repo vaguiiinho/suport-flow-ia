@@ -50,7 +50,7 @@ export class PrismaRetrievalRepository implements RetrievalRepositoryPort {
       FROM "KnowledgeChunk" AS chunk
       INNER JOIN "KnowledgeSource" AS source ON source."id" = chunk."sourceId"
       WHERE chunk."organizationId" = ${organizationId}::uuid
-        AND chunk."id" IN (${Prisma.join(chunkIds)})
+        AND chunk."id" IN (${Prisma.join(chunkIds.map((id) => Prisma.sql`${id}::uuid`))})
         AND chunk."visibility" = 'PUBLIC' AND chunk."active" = true
         AND source."organizationId" = ${organizationId}::uuid
         AND source."visibility" = 'PUBLIC' AND source."active" = true

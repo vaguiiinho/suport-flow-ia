@@ -8,7 +8,7 @@
     "start": "node dist/main.js",
     "lint": "eslint .",
     "test": "TSX_TSCONFIG_PATH=tsconfig.json node --import tsx --test src/shared/config/environment.spec.ts src/modules/auth/application/auth.service.spec.ts src/modules/knowledge/application/knowledge.service.spec.ts src/modules/knowledge/application/pdf-validator.spec.ts src/modules/knowledge/infrastructure/local-file-storage.spec.ts src/modules/assistant/application/assistant.service.spec.ts src/modules/assistant/application/rag-evaluation.spec.ts src/modules/conversations/application/conversation.service.spec.ts src/modules/tickets/application/ticket.service.spec.ts",
-    "test:integration": "TSX_TSCONFIG_PATH=tsconfig.json node --import tsx --test test/foundation.test.ts test/auth.integration.test.ts test/knowledge.integration.test.ts && TS_NODE_PROJECT=tsconfig.json node --require ts-node/register --test test/knowledge-http.integration.cts",
+    "test:integration": "TSX_TSCONFIG_PATH=tsconfig.json node --import tsx --test test/foundation.test.ts test/auth.integration.test.ts test/knowledge.integration.test.ts test/retrieval.integration.test.ts && TS_NODE_PROJECT=tsconfig.json node --require ts-node/register --test test/knowledge-http.integration.cts",
     "test:e2e:auth": "node test/http-auth-smoke.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",

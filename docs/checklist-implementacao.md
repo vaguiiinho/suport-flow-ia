@@ -143,7 +143,7 @@ Status: concluída em 6 de setembro de 2026.
 ## Fase 8 — Testes e avaliações de IA
 
 - [~] testar entidades, objetos de valor e casos de uso sem infraestrutura; há cobertura unitária para autenticação, conhecimento, validação de PDF, armazenamento e configuração, mas não para os módulos futuros;
-- [ ] testar repositórios Prisma com PostgreSQL e pgvector reais;
+- [x] testar repositórios Prisma com PostgreSQL e pgvector reais; o teste de retrieval pgvector valida organização, visibilidade e fonte ativa no PostgreSQL local.
 - [~] testar contratos HTTP, validação, cookies e autorização; autenticação e conhecimento possuem testes de integração/contrato, enquanto os contratos de chat, ingestão e tickets dependem das fases correspondentes;
 - [ ] criar E2E do chat até abertura confirmada do ticket;
 - [ ] criar E2E de artigo/PDF até recuperação pelo assistente;
