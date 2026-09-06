@@ -146,7 +146,7 @@ Status: concluída em 6 de setembro de 2026.
 - [x] testar repositórios Prisma com PostgreSQL e pgvector reais; o teste de retrieval pgvector valida organização, visibilidade e fonte ativa no PostgreSQL local.
 - [x] testar contratos HTTP, validação, cookies e autorização;
 - [x] criar E2E do chat até abertura confirmada do ticket;
-- [ ] criar E2E de artigo/PDF até recuperação pelo assistente;
+- [~] criar E2E de artigo/PDF até recuperação pelo assistente; ingestão e ativação de chunks são validadas no worker com PostgreSQL/pgvector real, enquanto o encadeamento HTTP completo até a resposta do assistente permanece pendente;
 - [~] criar fixtures com duas organizações e testes de isolamento entre elas; autenticação e conhecimento exercitam duas organizações, mas jobs, vetores, retrieval e tickets ainda dependem de implementação;
 - [x] montar dataset versionado com perguntas respondíveis e não respondíveis;
 - [~] medir recall do retrieval, fidelidade, citações e fallback; há gate determinístico para resposta/fallback/citação, enquanto a métrica em pgvector real permanece pendente;
