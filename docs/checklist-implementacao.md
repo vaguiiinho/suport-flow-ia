@@ -166,7 +166,7 @@ Status: concluída em 6 de setembro de 2026.
 - [ ] remover PII, segredos e conteúdo integral dos logs;
 - [~] definir retenção e exclusão de conversas e tickets; a política documenta a ausência deliberada de exclusão automática até aprovação de produto/conformidade;
 - [~] configurar headers de segurança e limites de requisição; API e web aplicam headers defensivos/CSP e o chat limita mensagens por conversa; rate limit global ainda depende de instrumentação operacional;
-- [ ] executar análise de dependências e revisão do agente `security`;
+- [~] executar análise de dependências e revisão do agente `security`; `npm audit --omit=dev --audit-level=high` não encontrou vulnerabilidades; revisão independente de segurança permanece pendente;
 - [ ] executar o gate de saída da fase com revisão de segurança independente e testes adversariais;
 
 ## Fase 10 — Observabilidade e deploy
