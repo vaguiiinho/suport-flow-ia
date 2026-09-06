@@ -8,6 +8,18 @@ Legenda:
 
 Marque um item como concluído somente quando implementação, testes e documentação correspondente estiverem alinhados.
 
+## Gate de saída de cada fase
+
+Toda fase só pode ser marcada como concluída após evidenciar, no escopo que ela altera:
+
+- testes de unidade dos casos de uso e regras críticas;
+- testes de integração para persistência, contratos HTTP, arquivos, jobs ou vetores quando aplicáveis;
+- testes de autorização, isolamento de organização, validação de entrada e falhas seguras quando houver dados, acesso ou IA;
+- `npm run format:check`, `npm run lint`, `npm run test` e `npm run build` passando; executar também `npm run test:integration` quando a fase afetar a API ou infraestrutura PostgreSQL, com `DATABASE_URL` e banco migrado conforme [ambiente](ambiente.md);
+- atualização da documentação e revisão de segurança proporcional ao risco.
+
+Cobertura segura significa cobrir caminhos críticos e negativos, não apenas atingir uma porcentagem. A instrumentação, o limiar de cobertura e o bloqueio no CI são entregas explícitas da Fase 8. No estado atual, formatação, lint, testes unitários e build passam; a execução local de integração exige o ambiente de banco configurado.
+
 ## Fase 0 — Governança
 
 Status: concluída em 30 de agosto de 2026.
@@ -18,6 +30,7 @@ Status: concluída em 30 de agosto de 2026.
 - [x] criar skills de resposta, ingestão e triagem;
 - [x] criar ADRs para stack, autenticação, isolamento de fontes, jobs e provedores de IA antes do scaffold;
 - [x] registrar em ADR a estratégia de organização padrão e evolução para multi-tenant;
+- [x] executar o gate de saída da fase para a documentação e o baseline do monorepo;
 
 ## Fase 1 — Fundação do monorepo
 
@@ -34,6 +47,7 @@ Status: concluída em 30 de agosto de 2026.
 - [x] criar Dockerfiles e Docker Compose para desenvolvimento;
 - [x] documentar variáveis de ambiente sem valores secretos;
 - [x] adicionar health checks para web, API, worker e banco;
+- [x] executar o gate de saída da fase para o scaffold, banco e Docker Compose;
 
 ## Fase 2 — Identidade e acesso
 
@@ -47,6 +61,7 @@ Status: concluída em 30 de agosto de 2026.
 - [x] criar sessão anônima opaca para conversas de clientes;
 - [x] resolver `OrganizationContext` no servidor a partir da sessão ou conversa;
 - [x] testar autenticação, expiração, autorização e acesso negado;
+- [x] executar o gate de saída da fase, incluindo testes de sessão, CSRF, autorização e isolamento entre organizações;
 
 ## Fase 3 — Base de conhecimento
 
@@ -62,6 +77,7 @@ Status: concluída em 6 de setembro de 2026.
 - [x] gerar nomes de arquivo e impedir path traversal;
 - [x] manter histórico de versão, hash e estado de indexação;
 - [x] garantir que uma fonte com falha não substitua a versão ativa;
+- [x] executar o gate de saída da fase, incluindo validação de PDF, armazenamento, autorização e isolamento entre organizações;
 
 ## Fase 4 — Ingestão e reindexação
 
@@ -80,6 +96,7 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] remover ou substituir chunks obsoletos de forma atômica;
 - [ ] testar interrupção, duplicidade, retry e preservação da versão ativa;
 - [ ] testar que jobs não reivindicam nem gravam dados em outra organização;
+- [~] executar o gate de saída da fase; o baseline passa, mas faltam os testes de worker, pgvector, reprocessamento e isolamento de jobs;
 
 ## Fase 5 — Retrieval e RAG
 
@@ -95,6 +112,7 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] tratar timeout, rate limit, indisponibilidade e saída inválida;
 - [ ] impedir que conteúdo recuperado altere políticas ou ferramentas;
 - [ ] versionar prompts, estratégia de retrieval e configuração de modelo;
+- [ ] executar o gate de saída da fase, incluindo avaliações de recuperação, citações, fallback, fonte interna e prompt injection;
 
 ## Fase 6 — Assistente do cliente
 
@@ -107,6 +125,7 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] garantir acessibilidade, responsividade e navegação por teclado;
 - [ ] limitar tamanho, frequência e abuso de mensagens;
 - [ ] testar conversa, fontes, fallback, falha do provedor e expiração da sessão;
+- [ ] executar o gate de saída da fase, incluindo fluxo anônimo, acessibilidade e abuso;
 
 ## Fase 7 — Tickets e painel
 
@@ -119,6 +138,7 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] criar painel protegido para artigos, PDFs e ingestões;
 - [ ] exibir falhas e permitir reprocessamento manual;
 - [ ] registrar trilha mínima de mudanças operacionais;
+- [~] executar o gate de saída da fase; a modelagem inicial existe, mas o fluxo de tickets e painel ainda não possui testes nem contratos;
 
 ## Fase 8 — Testes e avaliações de IA
 
@@ -132,7 +152,9 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] medir recall do retrieval, fidelidade, citações e fallback;
 - [ ] incluir casos adversariais de prompt injection e fonte interna;
 - [ ] calibrar e documentar o limiar de suficiência;
+- [ ] instrumentar cobertura de testes, definir limiares por caminho crítico e torná-los bloqueantes no CI;
 - [ ] tornar falha crítica de avaliação bloqueante no CI;
+- [ ] executar o gate de saída da fase com dataset de avaliação versionado e ambiente PostgreSQL/pgvector real;
 
 ## Fase 9 — Segurança e privacidade
 
@@ -145,6 +167,7 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] definir retenção e exclusão de conversas e tickets;
 - [ ] configurar headers de segurança e limites de requisição;
 - [ ] executar análise de dependências e revisão do agente `security`;
+- [ ] executar o gate de saída da fase com revisão de segurança independente e testes adversariais;
 
 ## Fase 10 — Observabilidade e deploy
 
@@ -158,6 +181,7 @@ Status: parcialmente estruturada. O schema persistente existe, mas a API ainda n
 - [ ] documentar runbook e rollback;
 - [ ] validar Docker Compose do zero;
 - [~] executar lint, testes, avaliações e build de produção; lint, testes e build foram executados para as Fases 1 a 3, mas avaliações de IA e a validação final do MVP dependem das fases seguintes;
+- [~] executar o gate de saída da fase; os comandos locais de formatação, lint e build passam, enquanto CI, avaliações, deploy e rollback dependem do MVP completo;
 
 ## Critérios de encerramento do MVP
 
