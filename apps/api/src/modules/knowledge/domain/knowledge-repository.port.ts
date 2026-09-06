@@ -39,10 +39,17 @@ export interface CreateKnowledgeVersionInput {
   version: number;
 }
 
+export interface CreateKnowledgeVersionOptions {
+  deactivateActiveVersion: boolean;
+}
+
 export interface KnowledgeRepositoryPort {
   listLatest(organizationId: string, type?: KnowledgeType): Promise<KnowledgeSourceVersion[]>;
   findLatest(organizationId: string, familyId: string): Promise<KnowledgeSourceVersion | null>;
   findVersions(organizationId: string, familyId: string): Promise<KnowledgeSourceVersion[]>;
-  createVersion(input: CreateKnowledgeVersionInput): Promise<KnowledgeSourceVersion>;
+  createVersion(
+    input: CreateKnowledgeVersionInput,
+    options?: CreateKnowledgeVersionOptions
+  ): Promise<KnowledgeSourceVersion>;
   softDeleteFamily(organizationId: string, familyId: string, deletedAt: Date): Promise<KnowledgeSourceVersion[]>;
 }

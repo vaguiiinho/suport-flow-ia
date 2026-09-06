@@ -7,7 +7,7 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "lint": "eslint .",
-    "test": "node --require ts-node/register --test src/shared/config/environment.spec.ts src/modules/auth/application/auth.service.spec.ts",
+    "test": "TSX_TSCONFIG_PATH=tsconfig.json node --import tsx --test src/shared/config/environment.spec.ts src/modules/auth/application/auth.service.spec.ts src/modules/knowledge/application/knowledge.service.spec.ts src/modules/knowledge/application/pdf-validator.spec.ts src/modules/knowledge/infrastructure/local-file-storage.spec.ts",
     "test:integration": "node --require ts-node/register --test test/foundation.test.ts test/auth.integration.test.ts",
     "test:e2e:auth": "node test/http-auth-smoke.mjs",
     "prisma:generate": "prisma generate",

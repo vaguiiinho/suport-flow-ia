@@ -73,6 +73,14 @@ export class KnowledgeController {
     return this.toResponse(await this.knowledgeService.createArticle(request.organizationContext!, body));
   }
 
+  @Get("articles/:id")
+  async getArticle(
+    @Req() request: RequestLike,
+    @Param("id", new ParseUUIDPipe({ version: "4" })) id: string
+  ) {
+    return this.toResponse(await this.knowledgeService.getArticle(request.organizationContext!, id));
+  }
+
   @Patch("articles/:id")
   @UseGuards(CsrfGuard, TrustedOriginGuard)
   async updateArticle(
@@ -139,7 +147,6 @@ export class KnowledgeController {
       content: source.type === "ARTICLE" ? source.content : undefined,
       mimeType: source.mimeType,
       pageCount: source.pageCount,
-      contentHash: source.contentHash,
       version: source.version,
       indexingStatus: source.indexingStatus,
       active: source.active,

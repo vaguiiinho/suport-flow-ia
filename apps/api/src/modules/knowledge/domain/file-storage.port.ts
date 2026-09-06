@@ -1,7 +1,13 @@
 export const FILE_STORAGE = Symbol("FILE_STORAGE");
 
+export interface PdfStorageTarget {
+  organizationId: string;
+  familyId: string;
+  versionId: string;
+}
+
 export interface FileStoragePort {
-  put(key: string, content: Buffer): Promise<void>;
-  read(key: string): Promise<Buffer>;
-  remove(key: string): Promise<void>;
+  putPdf(target: PdfStorageTarget, content: Buffer): Promise<string>;
+  read(organizationId: string, key: string): Promise<Buffer>;
+  remove(organizationId: string, key: string): Promise<void>;
 }

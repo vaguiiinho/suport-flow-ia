@@ -17,7 +17,14 @@ import { KnowledgeController } from "./presentation/knowledge.controller";
     MulterModule.registerAsync({
       useFactory: () => ({
         storage: memoryStorage(),
-        limits: { fileSize: readKnowledgeConfig(process.env).pdfMaxBytes, files: 1 }
+        limits: {
+          fileSize: readKnowledgeConfig(process.env).pdfMaxBytes,
+          files: 1,
+          fields: 3,
+          parts: 4,
+          fieldNameSize: 50,
+          fieldSize: 1024
+        }
       })
     })
   ],

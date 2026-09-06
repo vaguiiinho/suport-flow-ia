@@ -4,6 +4,7 @@ import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { KnowledgeConflictError } from "../domain/knowledge-errors";
 import {
   CreateKnowledgeVersionInput,
+  CreateKnowledgeVersionOptions,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
   KnowledgeType
@@ -35,8 +36,26 @@ export class PrismaKnowledgeRepository implements KnowledgeRepositoryPort {
     });
   }
 
-  createVersion(input: CreateKnowledgeVersionInput): Promise<KnowledgeSourceVersion> {
-    return this.prisma.knowledgeSource.create({ data: input }).catch((error: unknown) => {
+  createVersion(
+    input: CreateKnowledgeVersionInput,
+    options: CreateKnowledgeVersionOptions = { deactivateActiveVersion: false }
+  ): Promise<KnowledgeSourceVersion> {
+    const operation = options.deactivateActiveVersion
+      ? this.prisma.$transaction(async (transaction) => {
+          await transaction.knowledgeSource.updateMany({
+            where: {
+              organizationId: input.organizationId,
+              familyId: input.familyId,
+              active: true,
+              deletedAt: null
+            },
+            data: { active: false }
+          });
+          return transaction.knowledgeSource.create({ data: input });
+        })
+      : this.prisma.knowledgeSource.create({ data: input });
+
+    return operation.catch((error: unknown) => {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         throw new KnowledgeConflictError("A concurrent update created this version first");
       }

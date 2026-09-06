@@ -1,15 +1,16 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from "@nestjs/common";
 import { Response } from "express";
+import { MulterError } from "multer";
 import {
   InvalidKnowledgeContentError,
   KnowledgeConflictError,
   KnowledgeNotFoundError
 } from "../domain/knowledge-errors";
 
-@Catch(KnowledgeNotFoundError, InvalidKnowledgeContentError, KnowledgeConflictError)
+@Catch(KnowledgeNotFoundError, InvalidKnowledgeContentError, KnowledgeConflictError, MulterError)
 export class KnowledgeExceptionFilter implements ExceptionFilter {
   catch(
-    exception: KnowledgeNotFoundError | InvalidKnowledgeContentError | KnowledgeConflictError,
+    exception: KnowledgeNotFoundError | InvalidKnowledgeContentError | KnowledgeConflictError | MulterError,
     host: ArgumentsHost
   ): void {
     const response = host.switchToHttp().getResponse<Response>();
@@ -26,6 +27,16 @@ export class KnowledgeExceptionFilter implements ExceptionFilter {
         statusCode: HttpStatus.CONFLICT,
         code: "KNOWLEDGE_VERSION_CONFLICT",
         message: "The knowledge source was updated concurrently"
+      });
+      return;
+    }
+    if (exception instanceof MulterError) {
+      const fileTooLarge = exception.code === "LIMIT_FILE_SIZE";
+      const status = fileTooLarge ? HttpStatus.PAYLOAD_TOO_LARGE : HttpStatus.UNPROCESSABLE_ENTITY;
+      response.status(status).json({
+        statusCode: status,
+        code: fileTooLarge ? "PDF_TOO_LARGE" : "PDF_MULTIPART_INVALID",
+        message: fileTooLarge ? "The PDF exceeds the configured size limit" : "The PDF upload is invalid"
       });
       return;
     }

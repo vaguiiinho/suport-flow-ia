@@ -29,15 +29,18 @@ export class PdfValidator {
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(content),
-      disableWorker: true,
-      isEvalSupported: false,
       stopAtErrors: true,
-      useSystemFonts: false
+      useSystemFonts: false,
+      useWasm: false,
+      enableXfa: false
     });
 
     try {
       const document = await loadingTask.promise;
       try {
+        if ((await document.getPermissions()) !== null) {
+          throw new InvalidKnowledgeContentError("PDF_ENCRYPTED", "Encrypted PDFs are not accepted");
+        }
         if (document.numPages < 1) {
           throw new InvalidKnowledgeContentError("PDF_EMPTY", "The PDF contains no pages");
         }
@@ -48,9 +51,12 @@ export class PdfValidator {
         let hasExtractableText = false;
         for (let pageNumber = 1; pageNumber <= document.numPages && !hasExtractableText; pageNumber += 1) {
           const page = await document.getPage(pageNumber);
-          const text = await page.getTextContent();
-          hasExtractableText = text.items.some((item) => "str" in item && item.str.trim().length > 0);
-          page.cleanup();
+          try {
+            const text = await page.getTextContent();
+            hasExtractableText = text.items.some((item) => "str" in item && item.str.trim().length > 0);
+          } finally {
+            page.cleanup();
+          }
         }
         if (!hasExtractableText) {
           throw new InvalidKnowledgeContentError(
@@ -64,7 +70,7 @@ export class PdfValidator {
           pageCount: document.numPages
         };
       } finally {
-        await document.destroy();
+        await document.cleanup();
       }
     } catch (error) {
       if (error instanceof InvalidKnowledgeContentError) throw error;

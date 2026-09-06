@@ -48,6 +48,10 @@ export class KnowledgeService {
     return source;
   }
 
+  getArticle(context: OrganizationContext, familyId: string): Promise<KnowledgeSourceVersion> {
+    return this.requireType(context.organizationId, familyId, "ARTICLE");
+  }
+
   async history(context: OrganizationContext, familyId: string): Promise<KnowledgeSourceVersion[]> {
     const versions = await this.repository.findVersions(context.organizationId, familyId);
     if (versions.length === 0) throw new KnowledgeNotFoundError("Knowledge source not found");
@@ -84,17 +88,20 @@ export class KnowledgeService {
     if (current.title === title && current.visibility === visibility && current.contentHash === contentHash) {
       return current;
     }
-    return this.repository.createVersion({
-      id: randomUUID(),
-      familyId,
-      organizationId: context.organizationId,
-      type: "ARTICLE",
-      title,
-      content,
-      visibility,
-      contentHash,
-      version: current.version + 1
-    });
+    return this.repository.createVersion(
+      {
+        id: randomUUID(),
+        familyId,
+        organizationId: context.organizationId,
+        type: "ARTICLE",
+        title,
+        content,
+        visibility,
+        contentHash,
+        version: current.version + 1
+      },
+      { deactivateActiveVersion: current.visibility === "PUBLIC" && visibility === "INTERNAL" }
+    );
   }
 
   async uploadPdf(context: OrganizationContext, input: PdfInput): Promise<KnowledgeSourceVersion> {
@@ -116,32 +123,31 @@ export class KnowledgeService {
     const familyId = current?.familyId ?? randomUUID();
     const versionId = randomUUID();
     const version = (current?.version ?? 0) + 1;
-    const storageKey = [
-      "organizations",
-      context.organizationId,
-      "knowledge",
-      familyId,
-      "versions",
-      `${versionId}.pdf`
-    ].join("/");
-
-    await this.storage.put(storageKey, input.content);
+    const storageKey = await this.storage.putPdf(
+      { organizationId: context.organizationId, familyId, versionId },
+      input.content
+    );
     try {
-      return await this.repository.createVersion({
-        id: versionId,
-        familyId,
-        organizationId: context.organizationId,
-        type: "PDF",
-        title,
-        visibility,
-        storageKey,
-        mimeType: "application/pdf",
-        pageCount: validated.pageCount,
-        contentHash: validated.contentHash,
-        version
-      });
+      return await this.repository.createVersion(
+        {
+          id: versionId,
+          familyId,
+          organizationId: context.organizationId,
+          type: "PDF",
+          title,
+          visibility,
+          storageKey,
+          mimeType: "application/pdf",
+          pageCount: validated.pageCount,
+          contentHash: validated.contentHash,
+          version
+        },
+        {
+          deactivateActiveVersion: current?.visibility === "PUBLIC" && visibility === "INTERNAL"
+        }
+      );
     } catch (error) {
-      await this.storage.remove(storageKey);
+      await this.storage.remove(context.organizationId, storageKey).catch(() => undefined);
       throw error;
     }
   }
@@ -151,7 +157,9 @@ export class KnowledgeService {
     const versions = await this.repository.softDeleteFamily(context.organizationId, familyId, new Date());
     if (versions.length === 0) throw new KnowledgeNotFoundError("Knowledge source not found");
     await Promise.allSettled(
-      versions.filter((version) => version.storageKey).map((version) => this.storage.remove(version.storageKey!))
+      versions
+        .filter((version) => version.storageKey)
+        .map((version) => this.storage.remove(context.organizationId, version.storageKey!))
     );
   }
 
