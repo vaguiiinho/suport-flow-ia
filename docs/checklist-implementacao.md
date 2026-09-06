@@ -100,31 +100,31 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 5 — Retrieval e RAG
 
-- [ ] implementar busca vetorial com filtro obrigatório de visibilidade;
-- [ ] aplicar filtro obrigatório de organização na busca vetorial;
-- [ ] adicionar ranking e diversidade de fontes;
-- [ ] validar novamente a autorização dos chunks selecionados;
-- [ ] implementar `ChatModelPort`;
-- [ ] implementar adaptador inicial para OpenAI Responses API;
-- [ ] definir resposta estruturada com texto e referências de chunk;
-- [ ] vincular citações somente a chunks realmente recuperados;
-- [ ] implementar fallback para evidência insuficiente;
-- [ ] tratar timeout, rate limit, indisponibilidade e saída inválida;
-- [ ] impedir que conteúdo recuperado altere políticas ou ferramentas;
-- [ ] versionar prompts, estratégia de retrieval e configuração de modelo;
+- [x] implementar busca vetorial com filtro obrigatório de visibilidade;
+- [x] aplicar filtro obrigatório de organização na busca vetorial;
+- [x] adicionar ranking e diversidade de fontes;
+- [x] validar novamente a autorização dos chunks selecionados;
+- [x] implementar `ChatModelPort`;
+- [x] implementar adaptador inicial para OpenAI Responses API;
+- [x] definir resposta estruturada com texto e referências de chunk;
+- [x] vincular citações somente a chunks realmente recuperados;
+- [x] implementar fallback para evidência insuficiente;
+- [x] tratar timeout, rate limit, indisponibilidade e saída inválida;
+- [x] impedir que conteúdo recuperado altere políticas ou ferramentas;
+- [x] versionar prompts, estratégia de retrieval e configuração de modelo;
 - [ ] executar o gate de saída da fase, incluindo avaliações de recuperação, citações, fallback, fonte interna e prompt injection;
 
 ## Fase 6 — Assistente do cliente
 
 - [x] implementar criação de conversa anônima; a criação de sessão anônima também cria a conversa vinculada em transação e é coberta por testes de unidade, integração e contrato HTTP;
-- [ ] implementar envio e persistência de mensagens;
-- [ ] exibir resposta, fontes e estado de fallback;
-- [ ] oferecer escalonamento sem criar ticket automaticamente;
-- [ ] preparar resumo, categoria e prioridade sugeridos;
-- [ ] solicitar contato mínimo e confirmação explícita;
-- [ ] garantir acessibilidade, responsividade e navegação por teclado;
-- [ ] limitar tamanho, frequência e abuso de mensagens;
-- [ ] testar conversa, fontes, fallback, falha do provedor e expiração da sessão;
+- [x] implementar envio e persistência de mensagens;
+- [x] exibir resposta, fontes e estado de fallback;
+- [x] oferecer escalonamento sem criar ticket automaticamente;
+- [x] preparar resumo, categoria e prioridade sugeridos;
+- [x] solicitar contato mínimo e confirmação explícita;
+- [x] garantir acessibilidade, responsividade e navegação por teclado;
+- [x] limitar tamanho, frequência e abuso de mensagens;
+- [x] testar conversa, fontes, fallback, falha do provedor e expiração da sessão;
 - [ ] executar o gate de saída da fase, incluindo fluxo anônimo, acessibilidade e abuso;
 
 ## Fase 7 — Tickets e painel

@@ -1,9 +1,4 @@
-const foundations = [
-  "Respostas vinculadas a fontes autorizadas",
-  "Fallback seguro quando não há evidência",
-  "Abertura de chamado somente após confirmação",
-  "Arquitetura preparada para múltiplas organizações"
-];
+import { SupportChat } from "./support-chat";
 
 export default function HomePage() {
   return (
@@ -21,17 +16,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="foundation" aria-labelledby="foundation-title">
-        <div>
-          <p className="section-label">Princípios do MVP</p>
-          <h2 id="foundation-title">Uma base pequena, explícita e segura para evoluir.</h2>
-        </div>
-        <ul>
-          {foundations.map((foundation) => (
-            <li key={foundation}>{foundation}</li>
-          ))}
-        </ul>
-      </section>
+      <SupportChat />
     </main>
   );
 }
