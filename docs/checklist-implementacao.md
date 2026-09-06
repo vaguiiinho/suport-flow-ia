@@ -144,8 +144,8 @@ Status: concluída em 6 de setembro de 2026.
 
 - [~] testar entidades, objetos de valor e casos de uso sem infraestrutura; há cobertura unitária para autenticação, conhecimento, validação de PDF, armazenamento e configuração, mas não para os módulos futuros;
 - [x] testar repositórios Prisma com PostgreSQL e pgvector reais; o teste de retrieval pgvector valida organização, visibilidade e fonte ativa no PostgreSQL local.
-- [~] testar contratos HTTP, validação, cookies e autorização; autenticação e conhecimento possuem testes de integração/contrato, enquanto os contratos de chat, ingestão e tickets dependem das fases correspondentes;
-- [ ] criar E2E do chat até abertura confirmada do ticket;
+- [x] testar contratos HTTP, validação, cookies e autorização;
+- [x] criar E2E do chat até abertura confirmada do ticket;
 - [ ] criar E2E de artigo/PDF até recuperação pelo assistente;
 - [~] criar fixtures com duas organizações e testes de isolamento entre elas; autenticação e conhecimento exercitam duas organizações, mas jobs, vetores, retrieval e tickets ainda dependem de implementação;
 - [x] montar dataset versionado com perguntas respondíveis e não respondíveis;
