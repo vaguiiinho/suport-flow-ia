@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -13,6 +19,9 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    mem_limit: 320m
+    cpus: 0.50
+    logging: *default-logging
 
   api:
     build:
@@ -36,6 +45,7 @@ services:
       PDF_MAX_BYTES: ${PDF_MAX_BYTES:-10485760}
       PDF_MAX_PAGES: ${PDF_MAX_PAGES:-100}
       ARTICLE_MAX_CHARACTERS: ${ARTICLE_MAX_CHARACTERS:-100000}
+      NODE_OPTIONS: --max-old-space-size=224
     volumes:
       - knowledge_files:/app/uploads
     depends_on:
@@ -50,6 +60,9 @@ services:
       retries: 5
       start_period: 15s
     restart: unless-stopped
+    mem_limit: 320m
+    cpus: 0.50
+    logging: *default-logging
 
   worker:
     build:
@@ -72,13 +85,14 @@ services:
       OPENAI_EMBEDDING_DIMENSIONS: ${OPENAI_EMBEDDING_DIMENSIONS:-1536}
       OPENAI_EMBEDDING_TIMEOUT_MS: ${OPENAI_EMBEDDING_TIMEOUT_MS:-30000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-support_flow}:${POSTGRES_PASSWORD:-support_flow_dev}@postgres:5432/${POSTGRES_DB:-support_flow}?schema=public
+      NODE_OPTIONS: --max-old-space-size=224
     volumes:
       - knowledge_files:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "${WORKER_PORT:-3002}:3002"
+    expose:
+      - "3002"
     healthcheck:
       test: ["CMD", "node", "healthcheck.mjs"]
       interval: 15s
@@ -86,6 +100,9 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    mem_limit: 320m
+    cpus: 0.50
+    logging: *default-logging
 
   web:
     build:
@@ -95,6 +112,7 @@ services:
         NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-3001}/api/v1
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-3001}/api/v1
+      NODE_OPTIONS: --max-old-space-size=224
     depends_on:
       api:
         condition: service_healthy
@@ -107,6 +125,9 @@ services:
       retries: 5
       start_period: 20s
     restart: unless-stopped
+    mem_limit: 320m
+    cpus: 0.50
+    logging: *default-logging
 
 volumes:
   postgres_data:
