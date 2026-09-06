@@ -50,6 +50,11 @@ enum TicketPriority {
   URGENT
 }
 
+enum TicketAuditEventType {
+  CREATED
+  UPDATED
+}
+
 enum KnowledgeSourceType {
   ARTICLE
   PDF
@@ -80,6 +85,7 @@ model Organization {
   users            User[]
   conversations    Conversation[]
   tickets          Ticket[]
+  ticketAuditEvents TicketAuditEvent[]
   knowledgeSources KnowledgeSource[]
   ingestionJobs    IngestionJob[]
   attendantSessions AttendantSession[]
@@ -198,11 +204,26 @@ model Ticket {
   status         TicketStatus   @default(OPEN)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  auditEvents    TicketAuditEvent[]
 
   @@unique([organizationId, number])
   @@unique([organizationId, idempotencyKey])
   @@index([organizationId, status, createdAt])
   @@index([organizationId, priority, createdAt])
+}
+
+model TicketAuditEvent {
+  id             String               @id @default(uuid()) @db.Uuid
+  organizationId String               @db.Uuid
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  ticketId       String               @db.Uuid
+  ticket         Ticket               @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorUserId    String?              @db.Uuid
+  type           TicketAuditEventType
+  changes        Json
+  createdAt      DateTime             @default(now())
+
+  @@index([organizationId, ticketId, createdAt])
 }
 
 model KnowledgeSource {

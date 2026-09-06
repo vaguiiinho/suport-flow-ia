@@ -129,11 +129,11 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 7 — Tickets e painel
 
-- [~] modelar `Ticket` e seus estados; o schema e os enums existem desde a fundação, mas faltam entidade/caso de uso, contratos HTTP e testes do fluxo;
-- [ ] implementar criação idempotente a partir de conversa confirmada;
-- [ ] impedir que a IA altere status ou responsável;
-- [ ] implementar listagem, filtros e detalhe para atendentes;
-- [ ] implementar atualização manual de status, categoria e prioridade;
+- [x] modelar `Ticket` e seus estados;
+- [x] implementar criação idempotente a partir de conversa confirmada;
+- [x] impedir que a IA altere status ou responsável;
+- [x] implementar listagem, filtros e detalhe para atendentes;
+- [x] implementar atualização manual de status, categoria e prioridade;
 - [ ] exibir conversa e fontes relacionadas sem revelar dados indevidos;
 - [ ] criar painel protegido para artigos, PDFs e ingestões;
 - [ ] exibir falhas e permitir reprocessamento manual;
