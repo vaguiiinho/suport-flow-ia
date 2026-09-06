@@ -164,7 +164,7 @@ Status: concluída em 6 de setembro de 2026.
 - [ ] revisar isolamento por organização em banco, vetor, jobs e armazenamento;
 - [ ] revisar proteção contra prompt injection e exfiltração;
 - [ ] remover PII, segredos e conteúdo integral dos logs;
-- [ ] definir retenção e exclusão de conversas e tickets;
+- [~] definir retenção e exclusão de conversas e tickets; a política documenta a ausência deliberada de exclusão automática até aprovação de produto/conformidade;
 - [~] configurar headers de segurança e limites de requisição; API e web aplicam headers defensivos/CSP e o chat limita mensagens por conversa; rate limit global ainda depende de instrumentação operacional;
 - [ ] executar análise de dependências e revisão do agente `security`;
 - [ ] executar o gate de saída da fase com revisão de segurança independente e testes adversariais;
@@ -177,8 +177,8 @@ Status: concluída em 6 de setembro de 2026.
 - [ ] configurar logs estruturados e sanitizados;
 - [ ] implementar adaptador de armazenamento de objetos;
 - [~] criar migrations e procedimento de deploy; as migrations das Fases 1 a 3 existem e são executáveis pelos scripts documentados, mas o procedimento completo de deploy e rollback depende das funcionalidades restantes;
-- [ ] criar backup e restauração de banco e arquivos;
-- [ ] documentar runbook e rollback;
+- [~] criar backup e restauração de banco e arquivos; o procedimento de PostgreSQL e arquivos está documentado, enquanto a automação agendada depende da infraestrutura de deploy;
+- [x] documentar runbook e rollback;
 - [ ] validar Docker Compose do zero;
 - [~] executar lint, testes, avaliações e build de produção; lint, testes e build foram executados para as Fases 1 a 3, mas avaliações de IA e a validação final do MVP dependem das fases seguintes;
 - [~] executar o gate de saída da fase; os comandos locais de formatação, lint e build passam, enquanto CI, avaliações, deploy e rollback dependem do MVP completo;
