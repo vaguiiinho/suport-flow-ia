@@ -3,8 +3,10 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { KnowledgeConflictError } from "../domain/knowledge-errors";
 import {
+  CreateIngestionJobInput,
   CreateKnowledgeVersionInput,
   CreateKnowledgeVersionOptions,
+  IngestionJobRecord,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
   KnowledgeType
@@ -55,12 +57,80 @@ export class PrismaKnowledgeRepository implements KnowledgeRepositoryPort {
         })
       : this.prisma.knowledgeSource.create({ data: input });
 
-    return operation.catch((error: unknown) => {
+    return operation.catch((error: unknown) => this.handleError(error));
+  }
+
+  createVersionWithJob(
+    input: CreateKnowledgeVersionInput,
+    job: CreateIngestionJobInput,
+    options: CreateKnowledgeVersionOptions = { deactivateActiveVersion: false }
+  ) {
+    if (job.organizationId !== input.organizationId || job.sourceId !== input.id) {
+      throw new KnowledgeConflictError("The ingestion job must belong to the new knowledge version");
+    }
+    return this.prisma
+      .$transaction(async (transaction) => {
+        if (options.deactivateActiveVersion) {
+          await transaction.knowledgeSource.updateMany({
+            where: {
+              organizationId: input.organizationId,
+              familyId: input.familyId,
+              active: true,
+              deletedAt: null
+            },
+            data: { active: false }
+          });
+        }
+        const source = await transaction.knowledgeSource.create({ data: input });
+        const createdJob = await transaction.ingestionJob.create({ data: job });
+        return { source, job: createdJob };
+      })
+      .catch((error: unknown) => this.handleError(error));
+  }
+
+  async createReindexJob(input: CreateIngestionJobInput): Promise<IngestionJobRecord> {
+    try {
+      return await this.prisma.$transaction(async (transaction) => {
+        const idempotent = await transaction.ingestionJob.findUnique({
+          where: {
+            organizationId_idempotencyKey: {
+              organizationId: input.organizationId,
+              idempotencyKey: input.idempotencyKey
+            }
+          }
+        });
+        if (idempotent) return idempotent;
+        const active = await transaction.ingestionJob.findFirst({
+          where: {
+            organizationId: input.organizationId,
+            sourceId: input.sourceId,
+            strategyVersion: input.strategyVersion,
+            status: { in: ["PENDING", "PROCESSING"] }
+          },
+          orderBy: { createdAt: "desc" }
+        });
+        if (active) return active;
+        return transaction.ingestionJob.create({ data: input });
+      });
+    } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        throw new KnowledgeConflictError("A concurrent update created this version first");
+        const active = await this.prisma.ingestionJob.findFirst({
+          where: {
+            organizationId: input.organizationId,
+            sourceId: input.sourceId,
+            strategyVersion: input.strategyVersion,
+            status: { in: ["PENDING", "PROCESSING"] }
+          },
+          orderBy: { createdAt: "desc" }
+        });
+        if (active) return active;
       }
-      throw error;
-    });
+      return this.handleError(error);
+    }
+  }
+
+  findIngestionJob(organizationId: string, jobId: string): Promise<IngestionJobRecord | null> {
+    return this.prisma.ingestionJob.findFirst({ where: { id: jobId, organizationId } });
   }
 
   async softDeleteFamily(organizationId: string, familyId: string, deletedAt: Date): Promise<KnowledgeSourceVersion[]> {
@@ -69,11 +139,31 @@ export class PrismaKnowledgeRepository implements KnowledgeRepositoryPort {
         where: { organizationId, familyId, deletedAt: null }
       });
       if (versions.length === 0) return [];
+      await transaction.ingestionJob.updateMany({
+        where: {
+          organizationId,
+          sourceId: { in: versions.map((version) => version.id) },
+          status: { in: ["PENDING", "PROCESSING"] }
+        },
+        data: {
+          status: "FAILED",
+          errorCode: "SOURCE_DELETED",
+          errorMessage: "The source was deleted before ingestion completed",
+          completedAt: deletedAt
+        }
+      });
       await transaction.knowledgeSource.updateMany({
         where: { organizationId, familyId, deletedAt: null },
         data: { deletedAt, active: false }
       });
       return versions;
     });
+  }
+
+  private handleError(error: unknown): never {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new KnowledgeConflictError("A concurrent update created this version first");
+    }
+    throw error;
   }
 }

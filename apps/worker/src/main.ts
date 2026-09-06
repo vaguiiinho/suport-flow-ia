@@ -2,21 +2,35 @@ import "dotenv/config";
 import { createServer } from "node:http";
 import { Pool } from "pg";
 import { createHealthResponse } from "./health";
-
-function readWorkerPort(rawValue: string | undefined): number {
-  const port = Number(rawValue ?? "3002");
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error("WORKER_PORT must be an integer between 1 and 65535");
-  }
-  return port;
-}
+import { readWorkerConfig } from "./ingestion/config";
+import { IngestionWorker } from "./ingestion/ingestion-worker";
+import { TextExtractor } from "./ingestion/text-extractor";
+import { LocalFileReader } from "./infrastructure/local-file-reader";
+import { OpenAiEmbeddingProvider } from "./infrastructure/openai-embedding-provider";
+import { PostgresIngestionRepository } from "./infrastructure/postgres-ingestion-repository";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   throw new Error("DATABASE_URL is required");
 }
 
-const pool = new Pool({ connectionString, max: 2 });
+const config = readWorkerConfig(process.env);
+const pool = new Pool({ connectionString, max: 5 });
+const repository = new PostgresIngestionRepository(pool);
+const worker = new IngestionWorker(
+  repository,
+  new TextExtractor(new LocalFileReader(config.fileStorageRoot)),
+  new OpenAiEmbeddingProvider(config.embedding),
+  {
+    workerId: config.workerId,
+    maxAttempts: config.maxAttempts,
+    claimTimeoutMs: config.claimTimeoutMs,
+    retryBaseMs: config.retryBaseMs,
+    batchSize: config.batchSize,
+    chunkMaxCharacters: config.chunkMaxCharacters,
+    chunkOverlapCharacters: config.chunkOverlapCharacters
+  }
+);
 
 async function isDatabaseReady(): Promise<boolean> {
   try {
@@ -39,12 +53,33 @@ const server = createServer(async (request, response) => {
   response.end(JSON.stringify(health));
 });
 
-const port = readWorkerPort(process.env.WORKER_PORT);
+const port = config.port;
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Worker foundation listening on port ${port}`);
+  console.log(`Worker listening on port ${port}`);
 });
 
+let stopping = false;
+let timer: NodeJS.Timeout | undefined;
+
+async function poll(): Promise<void> {
+  if (stopping) return;
+  try {
+    const result = await worker.runOnce();
+    if (result.failure) {
+      console.warn(`Ingestion job ${result.jobId} failed with ${result.failure.code}`);
+    }
+    timer = setTimeout(() => void poll(), result.processed ? 0 : config.pollIntervalMs);
+  } catch {
+    // Database failures are observed through readiness; do not log source content or provider details.
+    timer = setTimeout(() => void poll(), config.pollIntervalMs);
+  }
+}
+
+void poll();
+
 async function shutdown(): Promise<void> {
+  stopping = true;
+  if (timer) clearTimeout(timer);
   server.close();
   await pool.end();
 }

@@ -236,19 +236,25 @@ model KnowledgeSource {
 }
 
 model KnowledgeChunk {
-  id            String          @id @default(uuid()) @db.Uuid
-  sourceId      String          @db.Uuid
-  source        KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  sourceVersion Int
-  position      Int
-  page          Int?
-  content       String          @db.Text
-  embedding     Unsupported("vector")?
-  active        Boolean         @default(false)
-  createdAt     DateTime        @default(now())
+  id                  String              @id @default(uuid()) @db.Uuid
+  organizationId      String              @db.Uuid
+  sourceId            String              @db.Uuid
+  source              KnowledgeSource     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceVersion       Int
+  visibility          KnowledgeVisibility
+  strategyVersion     String
+  embeddingModel      String
+  embeddingDimensions Int
+  position            Int
+  page                Int?
+  content             String              @db.Text
+  embedding           Unsupported("vector")?
+  active              Boolean             @default(false)
+  createdAt           DateTime            @default(now())
 
   @@unique([sourceId, sourceVersion, position])
   @@index([sourceId, active])
+  @@index([organizationId, visibility, active])
 }
 
 model IngestionJob {
@@ -266,6 +272,7 @@ model IngestionJob {
   availableAt       DateTime           @default(now())
   claimedAt         DateTime?
   claimedBy         String?
+  heartbeatAt       DateTime?
   errorCode         String?
   errorMessage      String?
   completedAt       DateTime?

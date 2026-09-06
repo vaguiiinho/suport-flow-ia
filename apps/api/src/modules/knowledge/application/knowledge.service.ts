@@ -4,6 +4,9 @@ import { OrganizationContext } from "../../../shared/organization/organization-c
 import { FILE_STORAGE, FileStoragePort } from "../domain/file-storage.port";
 import { KnowledgeNotFoundError, InvalidKnowledgeContentError } from "../domain/knowledge-errors";
 import {
+  CreateKnowledgeVersionInput,
+  CreateKnowledgeVersionOptions,
+  IngestionJobRecord,
   KNOWLEDGE_REPOSITORY,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
@@ -28,6 +31,10 @@ export interface PdfInput {
   mimeType: string;
   content: Buffer;
 }
+
+export type IndexedKnowledgeSourceVersion = KnowledgeSourceVersion & { ingestionJob: IngestionJobRecord };
+
+const INGESTION_STRATEGY_VERSION = "support-flow-ingestion-v1";
 
 @Injectable()
 export class KnowledgeService {
@@ -60,12 +67,13 @@ export class KnowledgeService {
     return versions;
   }
 
-  async createArticle(context: OrganizationContext, input: ArticleInput): Promise<KnowledgeSourceVersion> {
+  async createArticle(context: OrganizationContext, input: ArticleInput): Promise<IndexedKnowledgeSourceVersion> {
     const title = this.validateTitle(input.title);
     const content = this.normalizeArticle(input.content);
     const visibility = this.validateVisibility(input.visibility);
-    return this.repository.createVersion({
-      id: randomUUID(),
+    const id = randomUUID();
+    return this.createPendingVersion({
+      id,
       familyId: randomUUID(),
       organizationId: context.organizationId,
       type: "ARTICLE",
@@ -81,7 +89,7 @@ export class KnowledgeService {
     context: OrganizationContext,
     familyId: string,
     input: UpdateArticleInput
-  ): Promise<KnowledgeSourceVersion> {
+  ): Promise<KnowledgeSourceVersion | IndexedKnowledgeSourceVersion> {
     const current = await this.requireType(context.organizationId, familyId, "ARTICLE");
     const title = this.validateTitle(input.title ?? current.title);
     const content = this.normalizeArticle(input.content ?? current.content ?? "");
@@ -90,7 +98,7 @@ export class KnowledgeService {
     if (current.title === title && current.visibility === visibility && current.contentHash === contentHash) {
       return current;
     }
-    return this.repository.createVersion(
+    return this.createPendingVersion(
       {
         id: randomUUID(),
         familyId,
@@ -106,7 +114,10 @@ export class KnowledgeService {
     );
   }
 
-  async uploadPdf(context: OrganizationContext, input: PdfInput): Promise<KnowledgeSourceVersion> {
+  async uploadPdf(
+    context: OrganizationContext,
+    input: PdfInput
+  ): Promise<KnowledgeSourceVersion | IndexedKnowledgeSourceVersion> {
     const current = input.familyId ? await this.requireType(context.organizationId, input.familyId, "PDF") : null;
     const title = this.validateTitle(input.title);
     const visibility = this.validateVisibility(input.visibility);
@@ -128,7 +139,7 @@ export class KnowledgeService {
       input.content
     );
     try {
-      return await this.repository.createVersion(
+      return await this.createPendingVersion(
         {
           id: versionId,
           familyId,
@@ -169,6 +180,35 @@ export class KnowledgeService {
     }
   }
 
+  async reindex(
+    context: OrganizationContext,
+    familyId: string,
+    clientIdempotencyKey: string
+  ): Promise<IngestionJobRecord> {
+    const source = await this.get(context, familyId);
+    const normalizedKey = clientIdempotencyKey.trim();
+    if (normalizedKey.length < 8 || normalizedKey.length > 200) {
+      throw new InvalidKnowledgeContentError(
+        "IDEMPOTENCY_KEY_INVALID",
+        "Idempotency-Key must contain between 8 and 200 characters"
+      );
+    }
+    return this.repository.createReindexJob({
+      id: randomUUID(),
+      organizationId: context.organizationId,
+      sourceId: source.id,
+      operation: "REINDEX",
+      idempotencyKey: this.hash(
+        `REINDEX:${source.id}:${source.contentHash}:${INGESTION_STRATEGY_VERSION}:${normalizedKey}`
+      ),
+      strategyVersion: INGESTION_STRATEGY_VERSION
+    });
+  }
+
+  getIngestionJob(context: OrganizationContext, jobId: string): Promise<IngestionJobRecord | null> {
+    return this.repository.findIngestionJob(context.organizationId, jobId);
+  }
+
   private async requireType(
     organizationId: string,
     familyId: string,
@@ -207,5 +247,24 @@ export class KnowledgeService {
 
   private hash(content: string): string {
     return createHash("sha256").update(content, "utf8").digest("hex");
+  }
+
+  private async createPendingVersion(
+    input: CreateKnowledgeVersionInput,
+    options: CreateKnowledgeVersionOptions = { deactivateActiveVersion: false }
+  ): Promise<IndexedKnowledgeSourceVersion> {
+    const result = await this.repository.createVersionWithJob(
+      input,
+      {
+        id: randomUUID(),
+        organizationId: input.organizationId,
+        sourceId: input.id,
+        operation: "INDEX",
+        idempotencyKey: this.hash(`INDEX:${input.id}:${input.contentHash}:${INGESTION_STRATEGY_VERSION}`),
+        strategyVersion: INGESTION_STRATEGY_VERSION
+      },
+      options
+    );
+    return { ...result.source, ingestionJob: result.job };
   }
 }

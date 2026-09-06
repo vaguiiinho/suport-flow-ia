@@ -148,3 +148,45 @@ test("database constraints allow only succeeded active versions and one active v
     })
   );
 });
+
+test("persists a new source version and its ingestion job in one transaction", async (context) => {
+  const prisma = new PrismaService();
+  await prisma.$connect();
+  context.after(async () => prisma.$disconnect());
+  const suffix = randomUUID();
+  const organization = await prisma.organization.create({
+    data: { name: "Ingestion transaction", slug: `ingestion-transaction-${suffix}` }
+  });
+  context.after(async () => {
+    await prisma.knowledgeSource.deleteMany({ where: { organizationId: organization.id } });
+    await prisma.organization.delete({ where: { id: organization.id } });
+  });
+  const sourceId = randomUUID();
+  const repository = new PrismaKnowledgeRepository(prisma);
+  const created = await repository.createVersionWithJob(
+    {
+      id: sourceId,
+      familyId: randomUUID(),
+      organizationId: organization.id,
+      type: "ARTICLE",
+      visibility: "PUBLIC",
+      title: "Transactional article",
+      content: "Content scheduled for ingestion",
+      contentHash: "transactional-hash",
+      version: 1
+    },
+    {
+      id: randomUUID(),
+      organizationId: organization.id,
+      sourceId,
+      operation: "INDEX",
+      idempotencyKey: `index-${sourceId}`,
+      strategyVersion: "support-flow-ingestion-v1"
+    }
+  );
+
+  assert.equal(created.source.id, sourceId);
+  assert.equal(created.job.sourceId, sourceId);
+  assert.equal(created.job.status, "PENDING");
+  assert.equal(await prisma.ingestionJob.count({ where: { organizationId: organization.id, sourceId } }), 1);
+});

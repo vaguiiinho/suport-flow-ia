@@ -4,8 +4,10 @@ import test from "node:test";
 import { OrganizationContext } from "../../../shared/organization/organization-context";
 import { FileStoragePort } from "../domain/file-storage.port";
 import {
+  CreateIngestionJobInput,
   CreateKnowledgeVersionInput,
   CreateKnowledgeVersionOptions,
+  IngestionJobRecord,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
   KnowledgeType
@@ -52,6 +54,7 @@ function source(overrides: Partial<KnowledgeSourceVersion> = {}): KnowledgeSourc
 
 class MemoryRepository implements KnowledgeRepositoryPort {
   readonly versions: KnowledgeSourceVersion[] = [];
+  readonly jobs: IngestionJobRecord[] = [];
   lastCreateOptions: CreateKnowledgeVersionOptions | undefined;
   failCreate = false;
 
@@ -103,6 +106,30 @@ class MemoryRepository implements KnowledgeRepositoryPort {
     return Promise.resolve(created);
   }
 
+  async createVersionWithJob(
+    input: CreateKnowledgeVersionInput,
+    job: CreateIngestionJobInput,
+    options?: CreateKnowledgeVersionOptions
+  ) {
+    const created = await this.createVersion(input, options);
+    const createdJob = this.createJob(job);
+    return { source: created, job: createdJob };
+  }
+
+  async createReindexJob(input: CreateIngestionJobInput): Promise<IngestionJobRecord> {
+    return (
+      this.jobs.find(
+        (job) => job.organizationId === input.organizationId && job.idempotencyKey === input.idempotencyKey
+      ) ?? this.createJob(input)
+    );
+  }
+
+  findIngestionJob(requestedOrganizationId: string, jobId: string): Promise<IngestionJobRecord | null> {
+    return Promise.resolve(
+      this.jobs.find((job) => job.organizationId === requestedOrganizationId && job.id === jobId) ?? null
+    );
+  }
+
   async softDeleteFamily(
     requestedOrganizationId: string,
     familyId: string,
@@ -111,6 +138,27 @@ class MemoryRepository implements KnowledgeRepositoryPort {
     const matches = await this.findVersions(requestedOrganizationId, familyId);
     for (const item of matches) item.deletedAt = deletedAt;
     return matches;
+  }
+
+  private createJob(input: CreateIngestionJobInput): IngestionJobRecord {
+    const now = new Date();
+    const job: IngestionJobRecord = {
+      ...input,
+      status: "PENDING",
+      attempts: 0,
+      progress: 0,
+      availableAt: now,
+      claimedAt: null,
+      claimedBy: null,
+      heartbeatAt: null,
+      errorCode: null,
+      errorMessage: null,
+      completedAt: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.jobs.push(job);
+    return job;
   }
 }
 
@@ -183,6 +231,22 @@ test("article update is idempotent when title, visibility and hash do not change
 
   assert.equal(result, existing);
   assert.equal(repository.versions.length, 1);
+});
+
+test("new versions persist an ingestion job and manual reindexing is idempotent", async () => {
+  const repository = new MemoryRepository();
+  const service = createService(repository);
+  const created = await service.createArticle(context, {
+    title: "Password reset",
+    content: "Reset your password.",
+    visibility: "PUBLIC"
+  });
+
+  assert.equal(created.ingestionJob.sourceId, created.id);
+  assert.equal(created.ingestionJob.operation, "INDEX");
+  const first = await service.reindex(context, created.familyId, "reindex-key-123");
+  const repeated = await service.reindex(context, created.familyId, "reindex-key-123");
+  assert.equal(first.id, repeated.id);
 });
 
 test("making a public source internal immediately revokes the active public version", async () => {

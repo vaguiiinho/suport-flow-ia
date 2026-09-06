@@ -19,5 +19,7 @@ COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/apps/worker/package.json ./package.json
 COPY --from=build /app/apps/worker/dist ./dist
 COPY --from=build /app/apps/worker/healthcheck.mjs ./healthcheck.mjs
+RUN mkdir -p /app/uploads && chown -R node:node /app/uploads /app/apps/worker
+USER node
 EXPOSE 3002
 CMD ["npm", "run", "start"]

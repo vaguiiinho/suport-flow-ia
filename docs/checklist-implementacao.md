@@ -81,22 +81,22 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 4 — Ingestão e reindexação
 
-Status: parcialmente estruturada. O schema persistente existe, mas a API ainda não agenda jobs e o worker ainda expõe somente health check.
+Status: concluída em 6 de setembro de 2026.
 
-- [~] modelar `IngestionJob` com status, tentativas, progresso e erro sanitizado; a tabela, estados, tentativas, progresso, claim e campos de erro existem no Prisma, mas ainda faltam a validação/sanitização de erros e o caso de uso;
-- [ ] persistir trabalhos antes de responder ao upload;
-- [ ] implementar polling e claim seguro de trabalhos pelo worker;
-- [ ] extrair e normalizar texto de artigos e PDFs;
-- [ ] definir estratégia versionada de chunking;
-- [ ] implementar `EmbeddingProviderPort`;
-- [ ] implementar adaptador inicial para OpenAI Embeddings API;
-- [~] persistir `KnowledgeChunk` e vetores no pgvector; a extensão, a tabela e a coluna vetorial existem, mas não há pipeline que grave chunks ou embeddings;
-- [~] usar hash e versão da estratégia para idempotência; fontes já possuem hash e versão, e jobs possuem chave de idempotência e versão de estratégia, mas a regra de criação/reuso ainda não foi implementada;
-- [ ] implementar retry limitado e reindexação manual;
-- [ ] remover ou substituir chunks obsoletos de forma atômica;
-- [ ] testar interrupção, duplicidade, retry e preservação da versão ativa;
-- [ ] testar que jobs não reivindicam nem gravam dados em outra organização;
-- [~] executar o gate de saída da fase; o baseline passa, mas faltam os testes de worker, pgvector, reprocessamento e isolamento de jobs;
+- [x] modelar `IngestionJob` com status, tentativas, progresso e erro sanitizado;
+- [x] persistir trabalhos antes de responder ao upload;
+- [x] implementar polling e claim seguro de trabalhos pelo worker;
+- [x] extrair e normalizar texto de artigos e PDFs;
+- [x] definir estratégia versionada de chunking;
+- [x] implementar `EmbeddingProviderPort`;
+- [x] implementar adaptador inicial para OpenAI Embeddings API;
+- [x] persistir `KnowledgeChunk` e vetores no pgvector;
+- [x] usar hash e versão da estratégia para idempotência;
+- [x] implementar retry limitado e reindexação manual;
+- [x] remover ou substituir chunks obsoletos de forma atômica;
+- [x] testar interrupção, duplicidade, retry e preservação da versão ativa;
+- [x] testar que jobs não reivindicam nem gravam dados em outra organização;
+- [x] executar o gate de saída da fase, incluindo testes de worker, pgvector, reprocessamento e isolamento de jobs;
 
 ## Fase 5 — Retrieval e RAG
 

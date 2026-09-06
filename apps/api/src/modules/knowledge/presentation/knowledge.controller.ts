@@ -21,7 +21,7 @@ import { AttendantSessionGuard } from "../../auth/presentation/attendant-session
 import { CsrfGuard } from "../../auth/presentation/csrf.guard";
 import { RequestLike } from "../../auth/presentation/http-types";
 import { TrustedOriginGuard } from "../../auth/presentation/trusted-origin.guard";
-import { KnowledgeService } from "../application/knowledge.service";
+import { IndexedKnowledgeSourceVersion, KnowledgeService } from "../application/knowledge.service";
 import { InvalidKnowledgeContentError } from "../domain/knowledge-errors";
 import { KnowledgeSourceVersion, KnowledgeType } from "../domain/knowledge-repository.port";
 import { CreateArticleDto, UpdateArticleDto } from "./article.dto";
@@ -128,7 +128,7 @@ export class KnowledgeController {
     throw new InvalidKnowledgeContentError("TYPE_INVALID", "Type must be ARTICLE or PDF");
   }
 
-  private toResponse(source: KnowledgeSourceVersion) {
+  private toResponse(source: KnowledgeSourceVersion | IndexedKnowledgeSourceVersion) {
     return {
       id: source.familyId,
       versionId: source.id,
@@ -141,8 +141,21 @@ export class KnowledgeController {
       version: source.version,
       indexingStatus: source.indexingStatus,
       active: source.active,
+      ingestionJob: "ingestionJob" in source ? this.toJobResponse(source.ingestionJob) : undefined,
       createdAt: source.createdAt.toISOString(),
       updatedAt: source.updatedAt.toISOString()
+    };
+  }
+
+  private toJobResponse(job: IndexedKnowledgeSourceVersion["ingestionJob"]) {
+    return {
+      id: job.id,
+      operation: job.operation,
+      status: job.status,
+      attempts: job.attempts,
+      progress: job.progress,
+      strategyVersion: job.strategyVersion,
+      createdAt: job.createdAt.toISOString()
     };
   }
 }

@@ -7,11 +7,13 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "lint": "eslint .",
-    "test": "node --import tsx --test src/health.spec.ts"
+    "test": "node --import tsx --test src/health.spec.ts src/ingestion/chunker.spec.ts src/ingestion/ingestion-worker.spec.ts src/infrastructure/openai-embedding-provider.spec.ts",
+    "test:integration": "node --import tsx --test src/ingestion/postgres-ingestion.integration.spec.ts"
   },
   "dependencies": {
     "@support-flow/shared": "*",
     "dotenv": "^17.2.3",
+    "pdfjs-dist": "6.3.289",
     "pg": "^8.16.3"
   },
   "devDependencies": {

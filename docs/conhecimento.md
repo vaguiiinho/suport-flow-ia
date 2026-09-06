@@ -6,7 +6,7 @@
 - Toda fonte possui tipo `ARTICLE` ou `PDF` e visibilidade `PUBLIC` ou `INTERNAL`.
 - `id` identifica a família da fonte e permanece estável entre versões; `versionId` identifica uma versão específica.
 - Alterar um artigo ou reenviar um PDF com `sourceId` cria uma versão quando título, visibilidade ou conteúdo mudam. Uma requisição sem mudanças devolve a versão atual.
-- Versões novas começam com `indexingStatus=PENDING` e `active=false`. A ativação após indexação pertence à Fase 4.
+- Versões novas começam com `indexingStatus=PENDING` e `active=false`. A mesma transação que grava a versão cria um `IngestionJob`; a ativação ocorre somente após indexação integral bem-sucedida.
 - O histórico, o hash SHA-256 e a chave de armazenamento são persistidos, mas `contentHash` e `storageKey` não são expostos no contrato HTTP.
 - A exclusão é lógica para todas as versões da família. Arquivos PDF são removidos do armazenamento local em melhor esforço.
 
@@ -30,6 +30,8 @@ Sessão ausente ou inválida retorna `401`; CSRF ausente ou origem não confiáv
 | `DELETE` | `/knowledge/articles/:id`        | —                                  | Exclui logicamente a família; retorna `204`                   |
 | `POST`   | `/knowledge/pdfs`                | `multipart/form-data`              | Cria um PDF ou uma nova versão; retorna `201`                 |
 | `DELETE` | `/knowledge/pdfs/:id`            | —                                  | Exclui logicamente a família e remove arquivos; retorna `204` |
+| `POST`   | `/knowledge/:id/reindex`         | Header `Idempotency-Key`           | Agenda ou reutiliza um reprocessamento; retorna `202`         |
+| `GET`    | `/ingestion-jobs/:id`            | `id` UUID v4 do job                | Estado, progresso e erro sanitizado do job                    |
 
 O filtro `type` com outro valor retorna `422` com código `TYPE_INVALID`. Campos desconhecidos são rejeitados pela validação global da API.
 
@@ -84,12 +86,27 @@ O PDF deve:
   "version": 1,
   "indexingStatus": "PENDING",
   "active": false,
+  "ingestionJob": {
+    "id": "6aa0bafb-eeb6-4f09-970f-431c7d77a4be",
+    "operation": "INDEX",
+    "status": "PENDING",
+    "attempts": 0,
+    "progress": 0,
+    "strategyVersion": "support-flow-ingestion-v1",
+    "createdAt": "2026-09-06T12:00:00.000Z"
+  },
   "createdAt": "2026-09-06T12:00:00.000Z",
   "updatedAt": "2026-09-06T12:00:00.000Z"
 }
 ```
 
-`content` é retornado somente para artigos. PDFs retornam `mimeType=application/pdf`, `pageCount` preenchido e não expõem os bytes pelo contrato atual.
+`content` é retornado somente para artigos. PDFs retornam `mimeType=application/pdf`, `pageCount` preenchido e não expõem os bytes pelo contrato atual. `ingestionJob` aparece quando a chamada criou uma versão; consultas de fontes existentes não expõem a chave de idempotência, vetores nem conteúdo de PDF.
+
+## Ingestão e reprocessamento
+
+O worker faz polling no PostgreSQL e usa claim concorrente com `FOR UPDATE SKIP LOCKED`. Cada claim tem heartbeat, no máximo três tentativas por padrão e backoff exponencial. Um claim abandonado é recuperável após o timeout configurado. Artigos e PDFs são normalizados, fragmentados pela estratégia `support-flow-ingestion-v1`, enviados em lotes ao `EmbeddingProviderPort` e gravados com organização, visibilidade, versão da estratégia, modelo e dimensão do vetor.
+
+Em sucesso, chunks novos, troca de versão ativa e conclusão do job ocorrem em uma transação. Em falha, o erro armazenado é limitado a um código e uma mensagem segura, a versão ativa anterior permanece pesquisável e o reprocessamento manual exige `Idempotency-Key` com 8 a 200 caracteres. O worker nunca registra conteúdo integral da fonte, chave de API ou resposta do provedor.
 
 ## Erros de conteúdo
 
@@ -116,4 +133,4 @@ npm run lint
 npm run build
 ```
 
-As suítes cobrem regras de artigo e PDF, path traversal e links simbólicos, restrições de versionamento, preservação da versão ativa, autenticação, CSRF e isolamento entre duas organizações.
+As suítes cobrem regras de artigo e PDF, path traversal e links simbólicos, restrições de versionamento, preservação da versão ativa, autenticação, CSRF, criação transacional de jobs, claim concorrente, recuperação de claim abandonado, retry e isolamento entre duas organizações. Chamadas reais à OpenAI são opt-in; os testes usam um provedor determinístico.

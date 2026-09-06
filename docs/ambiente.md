@@ -78,12 +78,24 @@ As três variáveis numéricas de limite são validadas na inicialização e dev
 
 ## Variáveis do worker
 
-| Variável                     | Obrigatória | Finalidade                                              |
-| ---------------------------- | ----------- | ------------------------------------------------------- |
-| `DATABASE_URL`               | Sim         | Conexão usada pelo readiness e, futuramente, pela fila. |
-| `WORKER_PORT`                | Não         | Porta interna de saúde; padrão `3002`.                  |
-| `WORKER_ID`                  | Não         | Identidade futura para claim de jobs.                   |
-| `INGESTION_POLL_INTERVAL_MS` | Não         | Intervalo futuro de polling dos jobs.                   |
+| Variável                             | Obrigatória             | Finalidade                                                        |
+| ------------------------------------ | ----------------------- | ----------------------------------------------------------------- |
+| `DATABASE_URL`                       | Sim                     | Conexão usada pelo readiness e pela fila persistente.             |
+| `WORKER_PORT`                        | Não                     | Porta interna de saúde; padrão `3002`.                            |
+| `WORKER_ID`                          | Não                     | Identidade do worker usada no claim; padrão inclui o PID.         |
+| `INGESTION_POLL_INTERVAL_MS`         | Não                     | Intervalo de polling sem jobs; padrão `2000`.                     |
+| `INGESTION_CLAIM_TIMEOUT_MS`         | Não                     | Tempo para recuperar claim abandonado; padrão `120000`.           |
+| `INGESTION_MAX_ATTEMPTS`             | Não                     | Máximo de tentativas por job; padrão `3`.                         |
+| `INGESTION_RETRY_BASE_MS`            | Não                     | Base do backoff exponencial; padrão `5000`.                       |
+| `INGESTION_EMBEDDING_BATCH_SIZE`     | Não                     | Máximo de chunks por chamada de embedding; padrão `32`.           |
+| `INGESTION_CHUNK_MAX_CHARACTERS`     | Não                     | Tamanho máximo do fragmento; padrão `1200`.                       |
+| `INGESTION_CHUNK_OVERLAP_CHARACTERS` | Não                     | Sobreposição entre fragmentos; padrão `200`.                      |
+| `FILE_STORAGE_ROOT`                  | Sim para PDFs locais    | Mesmo diretório persistente usado pela API.                       |
+| `OPENAI_API_KEY`                     | Sim para processar jobs | Segredo do adaptador de embeddings; nunca registrar ou versionar. |
+| `OPENAI_BASE_URL`                    | Não                     | Base HTTPS da API; padrão `https://api.openai.com/v1`.            |
+| `OPENAI_EMBEDDING_MODEL`             | Não                     | Modelo de embeddings; padrão `text-embedding-3-small`.            |
+| `OPENAI_EMBEDDING_DIMENSIONS`        | Não                     | Dimensão esperada; padrão `1536`.                                 |
+| `OPENAI_EMBEDDING_TIMEOUT_MS`        | Não                     | Timeout de uma chamada ao provedor; padrão `30000`.               |
 
 ## Variáveis da web
 

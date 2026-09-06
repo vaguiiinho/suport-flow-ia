@@ -35,6 +35,7 @@ import { KnowledgeController } from "./presentation/knowledge.controller";
     { provide: KNOWLEDGE_CONFIG, useFactory: () => readKnowledgeConfig(process.env) },
     { provide: KNOWLEDGE_REPOSITORY, useClass: PrismaKnowledgeRepository },
     { provide: FILE_STORAGE, useClass: LocalFileStorage }
-  ]
+  ],
+  exports: [KnowledgeService]
 })
 export class KnowledgeModule {}
