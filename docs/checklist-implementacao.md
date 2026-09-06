@@ -148,9 +148,9 @@ Status: concluída em 6 de setembro de 2026.
 - [ ] criar E2E do chat até abertura confirmada do ticket;
 - [ ] criar E2E de artigo/PDF até recuperação pelo assistente;
 - [~] criar fixtures com duas organizações e testes de isolamento entre elas; autenticação e conhecimento exercitam duas organizações, mas jobs, vetores, retrieval e tickets ainda dependem de implementação;
-- [ ] montar dataset versionado com perguntas respondíveis e não respondíveis;
-- [ ] medir recall do retrieval, fidelidade, citações e fallback;
-- [ ] incluir casos adversariais de prompt injection e fonte interna;
+- [x] montar dataset versionado com perguntas respondíveis e não respondíveis;
+- [~] medir recall do retrieval, fidelidade, citações e fallback; há gate determinístico para resposta/fallback/citação, enquanto a métrica em pgvector real permanece pendente;
+- [x] incluir casos adversariais de prompt injection e fonte interna;
 - [ ] calibrar e documentar o limiar de suficiência;
 - [ ] instrumentar cobertura de testes, definir limiares por caminho crítico e torná-los bloqueantes no CI;
 - [ ] tornar falha crítica de avaliação bloqueante no CI;
