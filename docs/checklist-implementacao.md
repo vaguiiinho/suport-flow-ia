@@ -165,7 +165,7 @@ Status: concluída em 6 de setembro de 2026.
 - [ ] revisar proteção contra prompt injection e exfiltração;
 - [ ] remover PII, segredos e conteúdo integral dos logs;
 - [ ] definir retenção e exclusão de conversas e tickets;
-- [ ] configurar headers de segurança e limites de requisição;
+- [~] configurar headers de segurança e limites de requisição; headers defensivos e limites por conversa foram incluídos, enquanto rate limit global ainda depende de instrumentação operacional;
 - [ ] executar análise de dependências e revisão do agente `security`;
 - [ ] executar o gate de saída da fase com revisão de segurança independente e testes adversariais;
 
