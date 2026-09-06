@@ -171,7 +171,7 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 10 — Observabilidade e deploy
 
-- [ ] adicionar correlação entre requisição, conversa, job e chamada de IA;
+- [~] adicionar correlação entre requisição, conversa, job e chamada de IA; a API gera `X-Request-Id` e o persiste nos metadados seguros da resposta; a correlação do worker ainda será ampliada;
 - [ ] medir latência, tokens, custo, fallback e erro por provedor;
 - [ ] medir fila, tentativas, duração e falhas de ingestão;
 - [ ] configurar logs estruturados e sanitizados;

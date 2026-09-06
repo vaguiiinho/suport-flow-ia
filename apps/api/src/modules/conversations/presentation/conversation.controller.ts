@@ -13,6 +13,6 @@ export class ConversationController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(AnonymousSessionGuard, TrustedOriginGuard)
   send(@Param("conversationId") conversationId: string, @Body() body: SendMessageDto, @Req() request: RequestLike) {
-    return this.service.sendMessage(request.organizationContext!, conversationId, body.content);
+    return this.service.sendMessage(request.organizationContext!, conversationId, body.content, request.requestId);
   }
 }

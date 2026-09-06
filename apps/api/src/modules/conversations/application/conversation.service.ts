@@ -20,7 +20,7 @@ export class ConversationService {
     @Inject(CONVERSATION_CONFIG) private readonly config: ConversationConfig
   ) {}
 
-  async sendMessage(context: OrganizationContext, conversationId: string, contentInput: string) {
+  async sendMessage(context: OrganizationContext, conversationId: string, contentInput: string, requestId?: string) {
     if (context.actor.kind !== "ANONYMOUS" || context.actor.conversationId !== conversationId) {
       throw new ForbiddenException("Conversation does not belong to this session");
     }
@@ -44,7 +44,7 @@ export class ConversationService {
       conversationId,
       role: "ASSISTANT",
       content: assistant.answer,
-      citations: assistant.citations
+      citations: { citations: assistant.citations, execution: { requestId: requestId ?? null, ...assistant.metadata } }
     });
     return {
       message: { id: user.id, role: user.role, content: user.content, createdAt: user.createdAt.toISOString() },

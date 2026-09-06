@@ -7,6 +7,7 @@ export interface RequestLike {
   socket?: { remoteAddress?: string };
   attendantSession?: AttendantSessionRecord;
   organizationContext?: OrganizationContext;
+  requestId?: string;
 }
 
 export interface ResponseLike {
