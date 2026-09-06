@@ -11,11 +11,11 @@ const config: KnowledgeConfig = {
   articleMaxCharacters: 100
 };
 
-function pdfWithText(text: string): Buffer {
+function pdfWithText(text: string, pageCount = 1): Buffer {
   const stream = `BT /F1 12 Tf 72 100 Td (${text}) Tj ET`;
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    `<< /Type /Pages /Kids [${"3 0 R ".repeat(pageCount).trim()}] /Count ${pageCount} >>`,
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`
@@ -57,7 +57,20 @@ test("rejects empty, oversized, wrong-MIME, bad-signature and textless files", a
   await expectCode(validator.validate(Buffer.alloc(0), "application/pdf"), "PDF_EMPTY");
   await expectCode(validator.validate(pdfWithText("content"), "application/pdf"), "PDF_TOO_LARGE");
   await expectCode(new PdfValidator(config).validate(pdfWithText("content"), "text/plain"), "PDF_MIME_INVALID");
-  await expectCode(new PdfValidator(config).validate(Buffer.from("not a pdf"), "application/pdf"), "PDF_SIGNATURE_INVALID");
-  await expectCode(new PdfValidator(config).validate(pdfWithText(""), "application/pdf"), "PDF_WITHOUT_EXTRACTABLE_TEXT");
-  await expectCode(new PdfValidator(config).validate(pdfWithText("   "), "application/pdf"), "PDF_WITHOUT_EXTRACTABLE_TEXT");
+  await expectCode(
+    new PdfValidator(config).validate(Buffer.from("not a pdf"), "application/pdf"),
+    "PDF_SIGNATURE_INVALID"
+  );
+  await expectCode(
+    new PdfValidator(config).validate(pdfWithText(""), "application/pdf"),
+    "PDF_WITHOUT_EXTRACTABLE_TEXT"
+  );
+  await expectCode(
+    new PdfValidator(config).validate(pdfWithText("   "), "application/pdf"),
+    "PDF_WITHOUT_EXTRACTABLE_TEXT"
+  );
+  await expectCode(
+    new PdfValidator(config).validate(pdfWithText("content", 3), "application/pdf"),
+    "PDF_TOO_MANY_PAGES"
+  );
 });

@@ -47,6 +47,10 @@ A API e o worker retornam indisponibilidade quando não conseguem consultar o ba
 | `DEFAULT_ORGANIZATION_NAME` | Nome exibível da organização padrão                   | `SupportFlow`       |
 | `AUTH_SECURITY_PEPPER`      | Chave para pseudonimizar eventos de autenticação      | valor aleatório     |
 | `COOKIE_SECURE`             | Exige HTTPS para cookies quando `true`                | `false` local       |
+| `FILE_STORAGE_ROOT`         | Raiz persistente dos PDFs da base de conhecimento     | `./uploads`         |
+| `PDF_MAX_BYTES`             | Tamanho máximo de cada PDF, em bytes                  | `10485760`          |
+| `PDF_MAX_PAGES`             | Quantidade máxima de páginas de cada PDF              | `100`               |
+| `ARTICLE_MAX_CHARACTERS`    | Tamanho máximo do conteúdo normalizado de um artigo   | `100000`            |
 
 ## Variáveis da API
 
@@ -65,6 +69,12 @@ A API e o worker retornam indisponibilidade quando não conseguem consultar o ba
 | `COOKIE_SECURE`                 | Não         | Deve ser `true` em produção para cookies somente via HTTPS.               |
 | `BOOTSTRAP_ATTENDANT_EMAIL`     | Não         | E-mail explícito para criar o primeiro atendente.                         |
 | `BOOTSTRAP_ATTENDANT_PASSWORD`  | Não         | Senha explícita do bootstrap; mínimo de 12 caracteres.                    |
+| `FILE_STORAGE_ROOT`             | Não         | Raiz do armazenamento local; padrão `./uploads`.                          |
+| `PDF_MAX_BYTES`                 | Não         | Limite positivo em bytes por PDF; padrão `10485760` (10 MiB).             |
+| `PDF_MAX_PAGES`                 | Não         | Limite positivo de páginas por PDF; padrão `100`.                         |
+| `ARTICLE_MAX_CHARACTERS`        | Não         | Limite positivo do conteúdo após normalização; padrão `100000`.           |
+
+As três variáveis numéricas de limite são validadas na inicialização e devem ser inteiros positivos. No Compose completo, `FILE_STORAGE_ROOT` é definido como `/app/uploads` e usa o volume nomeado `knowledge_files`; no processo local, caminhos relativos são resolvidos a partir do diretório de execução da API.
 
 ## Variáveis do worker
 
@@ -89,5 +99,7 @@ A API e o worker retornam indisponibilidade quando não conseguem consultar o ba
 - O seed local é idempotente e não usa ID fixo para a organização padrão.
 - As duas variáveis `BOOTSTRAP_ATTENDANT_*` devem ser fornecidas juntas e podem ser removidas após o primeiro seed.
 - O valor padrão de `AUTH_SECURITY_PEPPER` no Compose é exclusivamente local; produção deve substituí-lo.
+- `FILE_STORAGE_ROOT` deve apontar para um diretório dedicado e persistente, gravável pelo usuário da API; o conteúdo desse diretório não deve ser versionado.
 
 Consulte [`autenticacao.md`](autenticacao.md) para os contratos HTTP e o fluxo de bootstrap.
+Consulte [`conhecimento.md`](conhecimento.md) para o contrato administrativo da base de conhecimento e as regras de armazenamento.

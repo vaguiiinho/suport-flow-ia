@@ -103,11 +103,7 @@ test("knowledge HTTP contract enforces authentication, CSRF, organization scope 
   const unauthenticatedUploadForm = new FormData();
   unauthenticatedUploadForm.set("title", "Unauthenticated PDF");
   unauthenticatedUploadForm.set("visibility", "PUBLIC");
-  unauthenticatedUploadForm.set(
-    "file",
-    new Blob(["x".repeat(2048)], { type: "application/pdf" }),
-    "large.pdf"
-  );
+  unauthenticatedUploadForm.set("file", new Blob(["x".repeat(2048)], { type: "application/pdf" }), "large.pdf");
   const unauthenticatedUpload = await fetch(`${baseUrl}/api/v1/knowledge/pdfs`, {
     method: "POST",
     body: unauthenticatedUploadForm

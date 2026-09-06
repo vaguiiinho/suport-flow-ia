@@ -107,9 +107,7 @@ export class KnowledgeService {
   }
 
   async uploadPdf(context: OrganizationContext, input: PdfInput): Promise<KnowledgeSourceVersion> {
-    const current = input.familyId
-      ? await this.requireType(context.organizationId, input.familyId, "PDF")
-      : null;
+    const current = input.familyId ? await this.requireType(context.organizationId, input.familyId, "PDF") : null;
     const title = this.validateTitle(input.title);
     const visibility = this.validateVisibility(input.visibility);
     const validated = await this.pdfValidator.validate(input.content, input.mimeType);

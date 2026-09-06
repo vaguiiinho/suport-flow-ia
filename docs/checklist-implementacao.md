@@ -50,16 +50,18 @@ Status: concluída em 30 de agosto de 2026.
 
 ## Fase 3 — Base de conhecimento
 
-- [ ] modelar `KnowledgeSource` e visibilidade `PUBLIC|INTERNAL`;
-- [ ] aplicar escopo de organização em fontes, arquivos e consultas administrativas;
-- [ ] implementar CRUD protegido de artigos;
-- [ ] implementar adaptador de armazenamento local;
-- [ ] definir porta compatível com armazenamento de objetos em produção;
-- [ ] implementar upload de PDF com limites de tamanho e páginas;
-- [ ] validar MIME, assinatura, criptografia e conteúdo vazio;
-- [ ] gerar nomes de arquivo e impedir path traversal;
-- [ ] manter histórico de versão, hash e estado de indexação;
-- [ ] garantir que uma fonte com falha não substitua a versão ativa;
+Status: concluída em 6 de setembro de 2026.
+
+- [x] modelar `KnowledgeSource` e visibilidade `PUBLIC|INTERNAL`;
+- [x] aplicar escopo de organização em fontes, arquivos e consultas administrativas;
+- [x] implementar CRUD protegido de artigos;
+- [x] implementar adaptador de armazenamento local;
+- [x] definir porta compatível com armazenamento de objetos em produção;
+- [x] implementar upload de PDF com limites de tamanho e páginas;
+- [x] validar MIME, assinatura, criptografia e conteúdo vazio;
+- [x] gerar nomes de arquivo e impedir path traversal;
+- [x] manter histórico de versão, hash e estado de indexação;
+- [x] garantir que uma fonte com falha não substitua a versão ativa;
 
 ## Fase 4 — Ingestão e reindexação
 

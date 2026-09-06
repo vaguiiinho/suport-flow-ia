@@ -27,13 +27,6 @@ import { TrustedOriginGuard } from "./presentation/trusted-origin.guard";
     { provide: PASSWORD_HASHER, useClass: CryptoPasswordHasher },
     { provide: SESSION_TOKEN, useClass: CryptoSessionToken }
   ],
-  exports: [
-    AUTH_CONFIG,
-    AuthService,
-    AttendantSessionGuard,
-    AnonymousSessionGuard,
-    CsrfGuard,
-    TrustedOriginGuard
-  ]
+  exports: [AUTH_CONFIG, AuthService, AttendantSessionGuard, AnonymousSessionGuard, CsrfGuard, TrustedOriginGuard]
 })
 export class AuthModule {}

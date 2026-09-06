@@ -22,10 +22,7 @@ test("stores generated keys under the configured root and blocks path traversal"
   const versionId = randomUUID();
   const key = `organizations/${organizationId}/knowledge/${familyId}/versions/${versionId}.pdf`;
 
-  assert.equal(
-    await storage.putPdf({ organizationId, familyId, versionId }, Buffer.from("safe content")),
-    key
-  );
+  assert.equal(await storage.putPdf({ organizationId, familyId, versionId }, Buffer.from("safe content")), key);
   assert.equal((await storage.read(organizationId, key)).toString(), "safe content");
   assert.equal((await readFile(join(root, key))).toString(), "safe content");
 
@@ -58,10 +55,7 @@ test("rejects a symbolic-link escape before writing the PDF", async (context) =>
   await symlink(outside, join(root, "organizations"));
 
   await assert.rejects(() =>
-    storage.putPdf(
-      { organizationId, familyId: randomUUID(), versionId: randomUUID() },
-      Buffer.from("unsafe")
-    )
+    storage.putPdf({ organizationId, familyId: randomUUID(), versionId: randomUUID() }, Buffer.from("unsafe"))
   );
   await assert.rejects(() => readFile(join(outside, organizationId, "knowledge")));
 });

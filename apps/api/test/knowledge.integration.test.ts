@@ -72,11 +72,7 @@ test("knowledge versions are isolated by organization and preserve the active ve
   assert.equal((await prisma.knowledgeSource.findUniqueOrThrow({ where: { id: active.id } })).active, true);
 
   await assert.rejects(
-    () =>
-      repository.createVersion(
-        { ...pendingInput, id: randomUUID() },
-        { deactivateActiveVersion: true }
-      ),
+    () => repository.createVersion({ ...pendingInput, id: randomUUID() }, { deactivateActiveVersion: true }),
     KnowledgeConflictError
   );
   assert.equal((await prisma.knowledgeSource.findUniqueOrThrow({ where: { id: active.id } })).active, true);
@@ -101,7 +97,10 @@ test("knowledge versions are isolated by organization and preserve the active ve
     versionsA.map((version) => version.version),
     [3, 2, 1]
   );
-  assert.deepEqual(versionsB.map((version) => version.title), ["Other organization"]);
+  assert.deepEqual(
+    versionsB.map((version) => version.title),
+    ["Other organization"]
+  );
 
   await repository.softDeleteFamily(organizationA.id, familyId, new Date());
   assert.equal(await repository.findLatest(organizationA.id, familyId), null);

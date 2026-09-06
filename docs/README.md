@@ -8,6 +8,7 @@ Este diretório concentra as decisões de produto e a ordem de implementação d
 - [`checklist-implementacao.md`](checklist-implementacao.md): tarefas rastreáveis para construir e validar o MVP.
 - [`ambiente.md`](ambiente.md): requisitos, comandos, variáveis e endpoints de saúde.
 - [`autenticacao.md`](autenticacao.md): bootstrap, sessões, CSRF, endpoints e limites de segurança.
+- [`conhecimento.md`](conhecimento.md): contrato HTTP administrativo, versionamento e armazenamento de artigos e PDFs.
 - [`adr/`](adr/README.md): decisões arquiteturais aceitas e suas consequências.
 
 ## Documentos futuros

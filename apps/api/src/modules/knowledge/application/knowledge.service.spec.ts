@@ -67,16 +67,14 @@ class MemoryRepository implements KnowledgeRepositoryPort {
 
   async findLatest(requestedOrganizationId: string, familyId: string): Promise<KnowledgeSourceVersion | null> {
     return (
-      (await this.findVersions(requestedOrganizationId, familyId)).sort((a, b) => b.version - a.version)[0] ??
-      null
+      (await this.findVersions(requestedOrganizationId, familyId)).sort((a, b) => b.version - a.version)[0] ?? null
     );
   }
 
   findVersions(requestedOrganizationId: string, familyId: string): Promise<KnowledgeSourceVersion[]> {
     return Promise.resolve(
       this.versions.filter(
-        (item) =>
-          item.organizationId === requestedOrganizationId && item.familyId === familyId && !item.deletedAt
+        (item) => item.organizationId === requestedOrganizationId && item.familyId === familyId && !item.deletedAt
       )
     );
   }

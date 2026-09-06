@@ -63,11 +63,7 @@ export class PrismaKnowledgeRepository implements KnowledgeRepositoryPort {
     });
   }
 
-  async softDeleteFamily(
-    organizationId: string,
-    familyId: string,
-    deletedAt: Date
-  ): Promise<KnowledgeSourceVersion[]> {
+  async softDeleteFamily(organizationId: string, familyId: string, deletedAt: Date): Promise<KnowledgeSourceVersion[]> {
     return this.prisma.$transaction(async (transaction) => {
       const versions = await transaction.knowledgeSource.findMany({
         where: { organizationId, familyId, deletedAt: null }

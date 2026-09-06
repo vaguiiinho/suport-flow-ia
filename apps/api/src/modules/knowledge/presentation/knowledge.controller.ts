@@ -52,9 +52,7 @@ export class KnowledgeController {
   @Get("sources/:id/history")
   async history(@Req() request: RequestLike, @Param("id", new ParseUUIDPipe({ version: "4" })) id: string) {
     return Promise.all(
-      (await this.knowledgeService.history(request.organizationContext!, id)).map((source) =>
-        this.toResponse(source)
-      )
+      (await this.knowledgeService.history(request.organizationContext!, id)).map((source) => this.toResponse(source))
     );
   }
 
@@ -74,10 +72,7 @@ export class KnowledgeController {
   }
 
   @Get("articles/:id")
-  async getArticle(
-    @Req() request: RequestLike,
-    @Param("id", new ParseUUIDPipe({ version: "4" })) id: string
-  ) {
+  async getArticle(@Req() request: RequestLike, @Param("id", new ParseUUIDPipe({ version: "4" })) id: string) {
     return this.toResponse(await this.knowledgeService.getArticle(request.organizationContext!, id));
   }
 
@@ -104,11 +99,7 @@ export class KnowledgeController {
   @Post("pdfs")
   @UseGuards(CsrfGuard, TrustedOriginGuard)
   @UseInterceptors(FileInterceptor("file"))
-  async uploadPdf(
-    @Req() request: RequestLike,
-    @Body() body: UploadPdfDto,
-    @UploadedFile() file?: Express.Multer.File
-  ) {
+  async uploadPdf(@Req() request: RequestLike, @Body() body: UploadPdfDto, @UploadedFile() file?: Express.Multer.File) {
     if (!file) throw new InvalidKnowledgeContentError("PDF_REQUIRED", "A PDF file is required");
     return this.toResponse(
       await this.knowledgeService.uploadPdf(request.organizationContext!, {

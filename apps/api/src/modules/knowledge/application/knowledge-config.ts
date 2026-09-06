@@ -18,10 +18,6 @@ export function readKnowledgeConfig(environment: NodeJS.ProcessEnv): KnowledgeCo
     storageRoot: environment.FILE_STORAGE_ROOT?.trim() || "./uploads",
     pdfMaxBytes: positiveInteger("PDF_MAX_BYTES", environment.PDF_MAX_BYTES, 10 * 1024 * 1024),
     pdfMaxPages: positiveInteger("PDF_MAX_PAGES", environment.PDF_MAX_PAGES, 100),
-    articleMaxCharacters: positiveInteger(
-      "ARTICLE_MAX_CHARACTERS",
-      environment.ARTICLE_MAX_CHARACTERS,
-      100_000
-    )
+    articleMaxCharacters: positiveInteger("ARTICLE_MAX_CHARACTERS", environment.ARTICLE_MAX_CHARACTERS, 100_000)
   };
 }
