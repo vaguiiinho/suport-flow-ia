@@ -16,6 +16,8 @@ export function SupportChat() {
   const [showEscalation, setShowEscalation] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [contact, setContact] = useState("");
+  const [ticketNumber, setTicketNumber] = useState<string>();
+  const ticketKey = useRef<string | undefined>(undefined);
   const input = useRef<HTMLTextAreaElement>(null);
 
   async function session(): Promise<string> {
@@ -55,6 +57,38 @@ export function SupportChat() {
     }
   }
 
+  async function createTicket() {
+    const lastQuestion = [...messages].reverse().find((message) => message.role === "USER")?.content;
+    if (!conversationId || !confirmed || !contact.trim() || !lastQuestion || pending || ticketNumber) return;
+    setPending(true);
+    setError(undefined);
+    try {
+      ticketKey.current ??= crypto.randomUUID();
+      const isEmail = contact.includes("@");
+      const response = await fetch(`${apiUrl}/tickets`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json", "idempotency-key": ticketKey.current },
+        body: JSON.stringify({
+          conversationId,
+          confirmed: true,
+          summary: lastQuestion.slice(0, 160),
+          description: lastQuestion,
+          ...(isEmail ? { contactEmail: contact.trim() } : { contactPhone: contact.trim() }),
+          category: "GENERAL",
+          priority: "MEDIUM"
+        })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof body.message === "string" ? body.message : "Não foi possível criar o chamado.");
+      setTicketNumber(body.number as string);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Não foi possível criar o chamado.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <section className="chat" aria-labelledby="chat-title">
       <div className="chat-heading">
@@ -87,11 +121,11 @@ export function SupportChat() {
       {showEscalation && (
         <aside className="escalation" aria-labelledby="escalation-title">
           <h3 id="escalation-title">Revise antes de continuar</h3>
-          <p>O resumo, a categoria e a prioridade serão apenas sugestões. Nenhum chamado será criado nesta etapa.</p>
+          <p>Revise os dados: resumo, categoria e prioridade são sugestões. O chamado só será criado após sua confirmação abaixo.</p>
           <label htmlFor="contact">E-mail ou telefone para retorno</label>
           <input id="contact" value={contact} onChange={(event) => setContact(event.target.value)} autoComplete="email" />
           <label className="confirmation"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /> Confirmo que desejo continuar com a abertura do chamado.</label>
-          <p className="confirmation-state" role="status">{confirmed && contact.trim() ? "Dados prontos para sua confirmação na próxima etapa." : "Informe um contato e confirme a solicitação para prosseguir."}</p>
+          {ticketNumber ? <p className="confirmation-state" role="status">Chamado {ticketNumber} criado. Um atendente fará o acompanhamento.</p> : <><p className="confirmation-state" role="status">{confirmed && contact.trim() ? "Pronto para criar o chamado." : "Informe um contato e confirme a solicitação para prosseguir."}</p><button type="button" disabled={!confirmed || !contact.trim() || pending} onClick={createTicket}>{pending ? "Criando chamado…" : "Criar chamado confirmado"}</button></>}
         </aside>
       )}
       <form className="composer" onSubmit={submit}>

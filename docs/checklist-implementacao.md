@@ -134,7 +134,7 @@ Status: concluída em 6 de setembro de 2026.
 - [x] impedir que a IA altere status ou responsável;
 - [x] implementar listagem, filtros e detalhe para atendentes;
 - [x] implementar atualização manual de status, categoria e prioridade;
-- [ ] exibir conversa e fontes relacionadas sem revelar dados indevidos;
+- [~] exibir conversa e fontes relacionadas sem revelar dados indevidos; o cliente exibe fontes usadas no chat, mas o detalhe protegido para atendentes ainda será incluído no painel;
 - [ ] criar painel protegido para artigos, PDFs e ingestões;
 - [ ] exibir falhas e permitir reprocessamento manual;
 - [ ] registrar trilha mínima de mudanças operacionais;
