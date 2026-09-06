@@ -1,0 +1,48 @@
+{
+  "name": "support-flow-ai",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build:shared && concurrently -n web,api,worker -c cyan,green,magenta \"npm run dev:web\" \"npm run dev:api\" \"npm run dev:worker\"",
+    "dev:web": "npm run dev --workspace @support-flow/web",
+    "dev:api": "npm run start:dev --workspace @support-flow/api",
+    "dev:worker": "npm run dev --workspace @support-flow/worker",
+    "build": "npm run build:shared && npm run build:api && npm run build:worker && npm run build:web",
+    "build:shared": "npm run build --workspace @support-flow/shared",
+    "build:web": "npm run build --workspace @support-flow/web",
+    "build:api": "npm run build --workspace @support-flow/api",
+    "build:worker": "npm run build --workspace @support-flow/worker",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test --workspaces --if-present",
+    "test:integration": "npm run test:integration --workspace @support-flow/api",
+    "db:generate": "npm run prisma:generate --workspace @support-flow/api",
+    "db:migrate:dev": "npm run prisma:migrate:dev --workspace @support-flow/api",
+    "db:migrate:deploy": "npm run prisma:migrate:deploy --workspace @support-flow/api",
+    "db:seed": "npm run db:seed --workspace @support-flow/api",
+    "db:up": "docker compose -f docker-compose.dev.yml up -d",
+    "db:down": "docker compose -f docker-compose.dev.yml down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.3",
+    "eslint": "^10.0.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.62.0"
+  },
+  "allowScripts": {
+    "@prisma/client@6.12.0": true,
+    "@prisma/engines@6.12.0": true,
+    "esbuild@0.28.2": true,
+    "prisma@6.12.0": true,
+    "sharp@0.34.5": true
+  }
+}

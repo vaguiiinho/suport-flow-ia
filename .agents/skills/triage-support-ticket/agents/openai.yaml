@@ -1,0 +1,4 @@
+interface:
+  display_name: "Triar ticket de suporte"
+  short_description: "Resumo e prioridade com confirmação humana"
+  default_prompt: "Use $triage-support-ticket para preparar uma triagem segura sem criar ou alterar o ticket automaticamente."

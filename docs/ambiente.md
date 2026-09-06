@@ -1,0 +1,93 @@
+# Ambiente de Desenvolvimento
+
+## Requisitos
+
+- Node.js 24 ou versão compatível com as dependências declaradas.
+- npm 11.
+- Docker com Docker Compose.
+
+## Preparação local
+
+```bash
+npm install
+npm run db:up
+npm run db:generate
+npm run db:migrate:dev
+npm run db:seed
+npm run dev
+```
+
+O `docker-compose.dev.yml` sobe somente PostgreSQL com pgvector. Para executar a pilha completa em containers, use:
+
+```bash
+docker compose up --build
+```
+
+## Endpoints de saúde
+
+- Web: `http://localhost:3000/api/health`
+- API: `http://localhost:3001/api/v1/health`
+- Worker: `http://localhost:3002/health`
+- PostgreSQL: `pg_isready` dentro do container.
+
+A API e o worker retornam indisponibilidade quando não conseguem consultar o banco.
+
+## Variáveis da raiz e Docker Compose
+
+| Variável                    | Finalidade                                            | Exemplo não secreto |
+| --------------------------- | ----------------------------------------------------- | ------------------- |
+| `POSTGRES_USER`             | Usuário local do PostgreSQL                           | `support_flow`      |
+| `POSTGRES_PASSWORD`         | Senha local; deve ser trocada fora do desenvolvimento | `change-me`         |
+| `POSTGRES_DB`               | Nome do banco                                         | `support_flow`      |
+| `POSTGRES_PORT`             | Porta publicada do banco                              | `5432`              |
+| `API_PORT`                  | Porta publicada da API                                | `3001`              |
+| `WEB_PORT`                  | Porta publicada da web                                | `3000`              |
+| `WORKER_PORT`               | Porta publicada do worker                             | `3002`              |
+| `DEFAULT_ORGANIZATION_SLUG` | Slug estável da organização padrão                    | `support-flow`      |
+| `DEFAULT_ORGANIZATION_NAME` | Nome exibível da organização padrão                   | `SupportFlow`       |
+| `AUTH_SECURITY_PEPPER`      | Chave para pseudonimizar eventos de autenticação      | valor aleatório     |
+| `COOKIE_SECURE`             | Exige HTTPS para cookies quando `true`                | `false` local       |
+
+## Variáveis da API
+
+| Variável                        | Obrigatória | Finalidade                                                                |
+| ------------------------------- | ----------- | ------------------------------------------------------------------------- |
+| `DATABASE_URL`                  | Sim         | Conexão PostgreSQL usada pelo Prisma.                                     |
+| `PORT`                          | Não         | Porta interna; padrão `3001`.                                             |
+| `WEB_ORIGIN`                    | Não         | Origens CORS separadas por vírgula; padrão local `http://localhost:3000`. |
+| `DEFAULT_ORGANIZATION_SLUG`     | Não         | Identifica a organização criada pelo seed.                                |
+| `DEFAULT_ORGANIZATION_NAME`     | Não         | Atualiza o nome da organização padrão no seed.                            |
+| `AUTH_SECURITY_PEPPER`          | Sim         | HMAC de e-mail e rede nos eventos; mínimo de 32 caracteres.               |
+| `AUTH_SESSION_TTL_SECONDS`      | Não         | Duração da sessão do atendente; padrão de 8 horas.                        |
+| `ANONYMOUS_SESSION_TTL_SECONDS` | Não         | Duração da sessão anônima; padrão de 7 dias.                              |
+| `AUTH_LOGIN_MAX_ATTEMPTS`       | Não         | Falhas permitidas por conta na janela; padrão `5`.                        |
+| `AUTH_LOGIN_WINDOW_SECONDS`     | Não         | Janela persistente do rate limit; padrão de 15 minutos.                   |
+| `COOKIE_SECURE`                 | Não         | Deve ser `true` em produção para cookies somente via HTTPS.               |
+| `BOOTSTRAP_ATTENDANT_EMAIL`     | Não         | E-mail explícito para criar o primeiro atendente.                         |
+| `BOOTSTRAP_ATTENDANT_PASSWORD`  | Não         | Senha explícita do bootstrap; mínimo de 12 caracteres.                    |
+
+## Variáveis do worker
+
+| Variável                     | Obrigatória | Finalidade                                              |
+| ---------------------------- | ----------- | ------------------------------------------------------- |
+| `DATABASE_URL`               | Sim         | Conexão usada pelo readiness e, futuramente, pela fila. |
+| `WORKER_PORT`                | Não         | Porta interna de saúde; padrão `3002`.                  |
+| `WORKER_ID`                  | Não         | Identidade futura para claim de jobs.                   |
+| `INGESTION_POLL_INTERVAL_MS` | Não         | Intervalo futuro de polling dos jobs.                   |
+
+## Variáveis da web
+
+| Variável              | Obrigatória         | Finalidade               |
+| --------------------- | ------------------- | ------------------------ |
+| `NEXT_PUBLIC_API_URL` | Sim para integração | URL pública base da API. |
+
+## Segurança
+
+- Nunca versione `.env` real.
+- Os valores dos `.env.example` são apenas modelos e não devem ser usados como credenciais de produção.
+- Produção deve injetar segredos pelo ambiente de execução ou secret manager.
+- O seed local é idempotente e não usa ID fixo para a organização padrão.
+- As duas variáveis `BOOTSTRAP_ATTENDANT_*` devem ser fornecidas juntas e podem ser removidas após o primeiro seed.
+- O valor padrão de `AUTH_SECURITY_PEPPER` no Compose é exclusivamente local; produção deve substituí-lo.
+
+Consulte [`autenticacao.md`](autenticacao.md) para os contratos HTTP e o fluxo de bootstrap.

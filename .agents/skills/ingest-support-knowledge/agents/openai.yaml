@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ingerir conhecimento de suporte"
+  short_description: "Artigos e PDFs indexados com rastreabilidade"
+  default_prompt: "Use $ingest-support-knowledge para implementar ou revisar uma ingestão idempotente de artigo ou PDF."

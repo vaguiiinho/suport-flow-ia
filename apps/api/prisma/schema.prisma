@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ATTENDANT
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum AuthEventType {
+  ATTENDANT_BOOTSTRAPPED
+  LOGIN_SUCCEEDED
+  LOGIN_FAILED
+  LOGIN_BLOCKED
+  LOGOUT
+}
+
+enum ConversationStatus {
+  OPEN
+  ESCALATED
+  CLOSED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum KnowledgeSourceType {
+  ARTICLE
+  PDF
+}
+
+enum KnowledgeVisibility {
+  PUBLIC
+  INTERNAL
+}
+
+enum IndexingStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+enum IngestionOperation {
+  INDEX
+  REINDEX
+}
+
+model Organization {
+  id               String            @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String            @unique
+  active           Boolean           @default(true)
+  users            User[]
+  conversations    Conversation[]
+  tickets          Ticket[]
+  knowledgeSources KnowledgeSource[]
+  ingestionJobs    IngestionJob[]
+  attendantSessions AttendantSession[]
+  anonymousSessions AnonymousSession[]
+  authEvents        AuthEvent[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model User {
+  id           String       @id @default(uuid()) @db.Uuid
+  organizationId String     @db.Uuid
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email        String
+  passwordHash String
+  role         UserRole     @default(ATTENDANT)
+  status       UserStatus   @default(ACTIVE)
+  sessions     AttendantSession[]
+  authEvents   AuthEvent[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([organizationId, email])
+  @@index([organizationId, status])
+}
+
+model Conversation {
+  id             String             @id @default(uuid()) @db.Uuid
+  organizationId String             @db.Uuid
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  status         ConversationStatus @default(OPEN)
+  anonymousSession AnonymousSession?
+  messages       Message[]
+  tickets        Ticket[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([organizationId, status, updatedAt])
+}
+
+model AttendantSession {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String       @db.Uuid
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  csrfTokenHash  String
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  lastSeenAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, userId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model AnonymousSession {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String       @unique @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  lastSeenAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model AuthEvent {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?       @db.Uuid
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type           AuthEventType
+  subjectHash    String
+  networkHash    String
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, subjectHash, type, createdAt])
+  @@index([organizationId, networkHash, type, createdAt])
+  @@index([organizationId, userId, createdAt])
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String       @db.Text
+  citations      Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model Ticket {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  conversationId String         @db.Uuid
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  number         String
+  idempotencyKey String
+  summary        String
+  description    String         @db.Text
+  contactEmail   String?
+  contactPhone   String?
+  category       String?
+  priority       TicketPriority @default(MEDIUM)
+  status         TicketStatus   @default(OPEN)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([organizationId, number])
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, priority, createdAt])
+}
+
+model KnowledgeSource {
+  id             String              @id @default(uuid()) @db.Uuid
+  familyId       String              @default(uuid()) @db.Uuid
+  organizationId String              @db.Uuid
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  type           KnowledgeSourceType
+  visibility     KnowledgeVisibility
+  title          String
+  content        String?             @db.Text
+  storageKey     String?
+  mimeType       String?
+  pageCount      Int?
+  contentHash    String
+  version        Int                 @default(1)
+  indexingStatus IndexingStatus      @default(PENDING)
+  active         Boolean             @default(false)
+  deletedAt      DateTime?
+  chunks         KnowledgeChunk[]
+  ingestionJobs  IngestionJob[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([organizationId, familyId, version])
+  @@index([organizationId, familyId, version])
+  @@index([organizationId, type, deletedAt, updatedAt])
+  @@index([organizationId, contentHash])
+  @@index([organizationId, visibility, active])
+  @@index([organizationId, indexingStatus, updatedAt])
+}
+
+model KnowledgeChunk {
+  id            String          @id @default(uuid()) @db.Uuid
+  sourceId      String          @db.Uuid
+  source        KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceVersion Int
+  position      Int
+  page          Int?
+  content       String          @db.Text
+  embedding     Unsupported("vector")?
+  active        Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+
+  @@unique([sourceId, sourceVersion, position])
+  @@index([sourceId, active])
+}
+
+model IngestionJob {
+  id               String             @id @default(uuid()) @db.Uuid
+  organizationId   String             @db.Uuid
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  sourceId          String             @db.Uuid
+  source            KnowledgeSource    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  operation         IngestionOperation
+  status            IndexingStatus     @default(PENDING)
+  idempotencyKey    String
+  strategyVersion   String
+  attempts          Int                @default(0)
+  progress          Int                @default(0)
+  availableAt       DateTime           @default(now())
+  claimedAt         DateTime?
+  claimedBy         String?
+  errorCode         String?
+  errorMessage      String?
+  completedAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, status, availableAt])
+  @@index([sourceId, createdAt])
+}
