@@ -65,15 +65,17 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 4 — Ingestão e reindexação
 
-- [ ] modelar `IngestionJob` com status, tentativas, progresso e erro sanitizado;
+Status: parcialmente estruturada. O schema persistente existe, mas a API ainda não agenda jobs e o worker ainda expõe somente health check.
+
+- [~] modelar `IngestionJob` com status, tentativas, progresso e erro sanitizado; a tabela, estados, tentativas, progresso, claim e campos de erro existem no Prisma, mas ainda faltam a validação/sanitização de erros e o caso de uso;
 - [ ] persistir trabalhos antes de responder ao upload;
 - [ ] implementar polling e claim seguro de trabalhos pelo worker;
 - [ ] extrair e normalizar texto de artigos e PDFs;
 - [ ] definir estratégia versionada de chunking;
 - [ ] implementar `EmbeddingProviderPort`;
 - [ ] implementar adaptador inicial para OpenAI Embeddings API;
-- [ ] persistir `KnowledgeChunk` e vetores no pgvector;
-- [ ] usar hash e versão da estratégia para idempotência;
+- [~] persistir `KnowledgeChunk` e vetores no pgvector; a extensão, a tabela e a coluna vetorial existem, mas não há pipeline que grave chunks ou embeddings;
+- [~] usar hash e versão da estratégia para idempotência; fontes já possuem hash e versão, e jobs possuem chave de idempotência e versão de estratégia, mas a regra de criação/reuso ainda não foi implementada;
 - [ ] implementar retry limitado e reindexação manual;
 - [ ] remover ou substituir chunks obsoletos de forma atômica;
 - [ ] testar interrupção, duplicidade, retry e preservação da versão ativa;
@@ -96,7 +98,7 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 6 — Assistente do cliente
 
-- [ ] implementar criação de conversa anônima;
+- [x] implementar criação de conversa anônima; a criação de sessão anônima também cria a conversa vinculada em transação e é coberta por testes de unidade, integração e contrato HTTP;
 - [ ] implementar envio e persistência de mensagens;
 - [ ] exibir resposta, fontes e estado de fallback;
 - [ ] oferecer escalonamento sem criar ticket automaticamente;
@@ -108,7 +110,7 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 7 — Tickets e painel
 
-- [ ] modelar `Ticket` e seus estados;
+- [~] modelar `Ticket` e seus estados; o schema e os enums existem desde a fundação, mas faltam entidade/caso de uso, contratos HTTP e testes do fluxo;
 - [ ] implementar criação idempotente a partir de conversa confirmada;
 - [ ] impedir que a IA altere status ou responsável;
 - [ ] implementar listagem, filtros e detalhe para atendentes;
@@ -120,12 +122,12 @@ Status: concluída em 6 de setembro de 2026.
 
 ## Fase 8 — Testes e avaliações de IA
 
-- [ ] testar entidades, objetos de valor e casos de uso sem infraestrutura;
+- [~] testar entidades, objetos de valor e casos de uso sem infraestrutura; há cobertura unitária para autenticação, conhecimento, validação de PDF, armazenamento e configuração, mas não para os módulos futuros;
 - [ ] testar repositórios Prisma com PostgreSQL e pgvector reais;
-- [ ] testar contratos HTTP, validação, cookies e autorização;
+- [~] testar contratos HTTP, validação, cookies e autorização; autenticação e conhecimento possuem testes de integração/contrato, enquanto os contratos de chat, ingestão e tickets dependem das fases correspondentes;
 - [ ] criar E2E do chat até abertura confirmada do ticket;
 - [ ] criar E2E de artigo/PDF até recuperação pelo assistente;
-- [ ] criar fixtures com duas organizações e testes de isolamento entre elas;
+- [~] criar fixtures com duas organizações e testes de isolamento entre elas; autenticação e conhecimento exercitam duas organizações, mas jobs, vetores, retrieval e tickets ainda dependem de implementação;
 - [ ] montar dataset versionado com perguntas respondíveis e não respondíveis;
 - [ ] medir recall do retrieval, fidelidade, citações e fallback;
 - [ ] incluir casos adversariais de prompt injection e fonte interna;
@@ -151,11 +153,11 @@ Status: concluída em 6 de setembro de 2026.
 - [ ] medir fila, tentativas, duração e falhas de ingestão;
 - [ ] configurar logs estruturados e sanitizados;
 - [ ] implementar adaptador de armazenamento de objetos;
-- [ ] criar migrations e procedimento de deploy;
+- [~] criar migrations e procedimento de deploy; as migrations das Fases 1 a 3 existem e são executáveis pelos scripts documentados, mas o procedimento completo de deploy e rollback depende das funcionalidades restantes;
 - [ ] criar backup e restauração de banco e arquivos;
 - [ ] documentar runbook e rollback;
 - [ ] validar Docker Compose do zero;
-- [ ] executar lint, testes, avaliações e build de produção;
+- [~] executar lint, testes, avaliações e build de produção; lint, testes e build foram executados para as Fases 1 a 3, mas avaliações de IA e a validação final do MVP dependem das fases seguintes;
 
 ## Critérios de encerramento do MVP
 
