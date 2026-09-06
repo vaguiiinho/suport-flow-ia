@@ -151,7 +151,7 @@ Status: concluída em 6 de setembro de 2026.
 - [x] montar dataset versionado com perguntas respondíveis e não respondíveis;
 - [~] medir recall do retrieval, fidelidade, citações e fallback; há gate determinístico para resposta/fallback/citação, enquanto a métrica em pgvector real permanece pendente;
 - [x] incluir casos adversariais de prompt injection e fonte interna;
-- [ ] calibrar e documentar o limiar de suficiência;
+- [x] calibrar e documentar o limiar de suficiência;
 - [ ] instrumentar cobertura de testes, definir limiares por caminho crítico e torná-los bloqueantes no CI;
 - [ ] tornar falha crítica de avaliação bloqueante no CI;
 - [ ] executar o gate de saída da fase com dataset de avaliação versionado e ambiente PostgreSQL/pgvector real;
