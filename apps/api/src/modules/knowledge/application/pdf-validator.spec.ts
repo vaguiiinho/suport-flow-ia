@@ -59,4 +59,5 @@ test("rejects empty, oversized, wrong-MIME, bad-signature and textless files", a
   await expectCode(new PdfValidator(config).validate(pdfWithText("content"), "text/plain"), "PDF_MIME_INVALID");
   await expectCode(new PdfValidator(config).validate(Buffer.from("not a pdf"), "application/pdf"), "PDF_SIGNATURE_INVALID");
   await expectCode(new PdfValidator(config).validate(pdfWithText(""), "application/pdf"), "PDF_WITHOUT_EXTRACTABLE_TEXT");
+  await expectCode(new PdfValidator(config).validate(pdfWithText("   "), "application/pdf"), "PDF_WITHOUT_EXTRACTABLE_TEXT");
 });

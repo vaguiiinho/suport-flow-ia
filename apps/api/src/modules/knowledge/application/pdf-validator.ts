@@ -29,6 +29,7 @@ export class PdfValidator {
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(content),
+      verbosity: pdfjs.VerbosityLevel.ERRORS,
       stopAtErrors: true,
       useSystemFonts: false,
       useWasm: false,
@@ -53,7 +54,7 @@ export class PdfValidator {
           const page = await document.getPage(pageNumber);
           try {
             const text = await page.getTextContent();
-            hasExtractableText = text.items.some((item) => "str" in item && item.str.trim().length > 0);
+            hasExtractableText = text.items.some((item) => "str" in item && /[\p{L}\p{N}]/u.test(item.str));
           } finally {
             page.cleanup();
           }

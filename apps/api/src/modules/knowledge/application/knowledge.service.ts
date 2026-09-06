@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { createHash, randomUUID } from "node:crypto";
 import { OrganizationContext } from "../../../shared/organization/organization-context";
 import { FILE_STORAGE, FileStoragePort } from "../domain/file-storage.port";
@@ -31,6 +31,8 @@ export interface PdfInput {
 
 @Injectable()
 export class KnowledgeService {
+  private readonly logger = new Logger(KnowledgeService.name);
+
   constructor(
     @Inject(KNOWLEDGE_REPOSITORY) private readonly repository: KnowledgeRepositoryPort,
     @Inject(FILE_STORAGE) private readonly storage: FileStoragePort,
@@ -147,7 +149,9 @@ export class KnowledgeService {
         }
       );
     } catch (error) {
-      await this.storage.remove(context.organizationId, storageKey).catch(() => undefined);
+      await this.storage.remove(context.organizationId, storageKey).catch(() => {
+        this.logger.warn("Could not remove a PDF orphan after source persistence failed");
+      });
       throw error;
     }
   }
@@ -156,11 +160,15 @@ export class KnowledgeService {
     if (type) await this.requireType(context.organizationId, familyId, type);
     const versions = await this.repository.softDeleteFamily(context.organizationId, familyId, new Date());
     if (versions.length === 0) throw new KnowledgeNotFoundError("Knowledge source not found");
-    await Promise.allSettled(
+    const removals = await Promise.allSettled(
       versions
         .filter((version) => version.storageKey)
         .map((version) => this.storage.remove(context.organizationId, version.storageKey!))
     );
+    const failedRemovals = removals.filter((result) => result.status === "rejected").length;
+    if (failedRemovals > 0) {
+      this.logger.warn(`Could not remove ${failedRemovals} stored PDF object(s) after logical deletion`);
+    }
   }
 
   private async requireType(
@@ -175,7 +183,9 @@ export class KnowledgeService {
 
   private normalizeArticle(content: string): string {
     const normalized = content.replace(/\r\n?/g, "\n").trim();
-    if (!normalized) throw new InvalidKnowledgeContentError("ARTICLE_EMPTY", "Article content is required");
+    if (!/[\p{L}\p{N}]/u.test(normalized)) {
+      throw new InvalidKnowledgeContentError("ARTICLE_EMPTY", "Article content is required");
+    }
     if (normalized.length > this.config.articleMaxCharacters) {
       throw new InvalidKnowledgeContentError("ARTICLE_TOO_LARGE", "Article content exceeds the configured limit");
     }

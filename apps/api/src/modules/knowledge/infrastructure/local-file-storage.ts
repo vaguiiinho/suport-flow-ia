@@ -16,8 +16,7 @@ export class LocalFileStorage implements FileStoragePort {
   async putPdf(target: PdfStorageTarget, content: Buffer): Promise<string> {
     const key = this.pdfKey(target);
     const targetPath = this.resolveKey(key);
-    await mkdir(dirname(targetPath), { recursive: true, mode: 0o750 });
-    await this.assertNoSymbolicLinks(dirname(targetPath));
+    await this.ensureDirectoryTree(dirname(targetPath));
     const temporary = `${targetPath}.${randomUUID()}.tmp`;
     try {
       await writeFile(temporary, content, { flag: "wx", mode: 0o640 });
@@ -57,9 +56,32 @@ export class LocalFileStorage implements FileStoragePort {
 
   private async assertNoSymbolicLinks(directory: string): Promise<void> {
     let current = directory;
-    while (current !== this.root) {
-      if ((await lstat(current)).isSymbolicLink()) throw new Error("Symbolic links are not allowed in storage paths");
+    while (true) {
+      const metadata = await lstat(current);
+      if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
+        throw new Error("Storage paths must contain directories without symbolic links");
+      }
+      if (current === this.root) break;
       current = dirname(current);
+    }
+  }
+
+  private async ensureDirectoryTree(directory: string): Promise<void> {
+    await mkdir(this.root, { recursive: true, mode: 0o750 });
+    await this.assertNoSymbolicLinks(this.root);
+    const segments = relative(this.root, directory).split(sep).filter(Boolean);
+    let current = this.root;
+    for (const segment of segments) {
+      current = resolve(current, segment);
+      try {
+        await mkdir(current, { mode: 0o750 });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
+      const metadata = await lstat(current);
+      if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
+        throw new Error("Storage paths must contain directories without symbolic links");
+      }
     }
   }
 

@@ -65,6 +65,11 @@ test("knowledge versions are isolated by organization and preserve the active ve
     version: 2
   };
   await repository.createVersion(pendingInput);
+  await prisma.knowledgeSource.update({
+    where: { id: pendingInput.id },
+    data: { indexingStatus: "FAILED" }
+  });
+  assert.equal((await prisma.knowledgeSource.findUniqueOrThrow({ where: { id: active.id } })).active, true);
 
   await assert.rejects(
     () =>

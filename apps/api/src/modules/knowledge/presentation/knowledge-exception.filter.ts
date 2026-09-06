@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from "@nestjs/common";
+import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, PayloadTooLargeException } from "@nestjs/common";
 import { Response } from "express";
 import { MulterError } from "multer";
 import {
@@ -7,13 +7,32 @@ import {
   KnowledgeNotFoundError
 } from "../domain/knowledge-errors";
 
-@Catch(KnowledgeNotFoundError, InvalidKnowledgeContentError, KnowledgeConflictError, MulterError)
+@Catch(
+  KnowledgeNotFoundError,
+  InvalidKnowledgeContentError,
+  KnowledgeConflictError,
+  MulterError,
+  PayloadTooLargeException
+)
 export class KnowledgeExceptionFilter implements ExceptionFilter {
   catch(
-    exception: KnowledgeNotFoundError | InvalidKnowledgeContentError | KnowledgeConflictError | MulterError,
+    exception:
+      | KnowledgeNotFoundError
+      | InvalidKnowledgeContentError
+      | KnowledgeConflictError
+      | MulterError
+      | PayloadTooLargeException,
     host: ArgumentsHost
   ): void {
     const response = host.switchToHttp().getResponse<Response>();
+    if (exception instanceof PayloadTooLargeException) {
+      response.status(HttpStatus.PAYLOAD_TOO_LARGE).json({
+        statusCode: HttpStatus.PAYLOAD_TOO_LARGE,
+        code: "PDF_TOO_LARGE",
+        message: "The PDF exceeds the configured size limit"
+      });
+      return;
+    }
     if (exception instanceof KnowledgeNotFoundError) {
       response.status(HttpStatus.NOT_FOUND).json({
         statusCode: HttpStatus.NOT_FOUND,

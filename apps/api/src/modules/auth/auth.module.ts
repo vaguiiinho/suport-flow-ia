@@ -28,6 +28,7 @@ import { TrustedOriginGuard } from "./presentation/trusted-origin.guard";
     { provide: SESSION_TOKEN, useClass: CryptoSessionToken }
   ],
   exports: [
+    AUTH_CONFIG,
     AuthService,
     AttendantSessionGuard,
     AnonymousSessionGuard,

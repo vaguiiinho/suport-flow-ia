@@ -21,5 +21,7 @@ COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/dist ./dist
 COPY --from=build /app/apps/api/prisma ./prisma
 COPY --from=build /app/apps/api/healthcheck.mjs ./healthcheck.mjs
+RUN mkdir -p /app/uploads && chown -R node:node /app/uploads /app/apps/api
+USER node
 EXPOSE 3001
 CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy --schema ./prisma/schema.prisma && node ./prisma/seed.mjs && node ./dist/main.js"]

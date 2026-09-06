@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -38,4 +38,30 @@ test("stores generated keys under the configured root and blocks path traversal"
 
   await storage.remove(organizationId, key);
   await assert.rejects(() => storage.read(organizationId, key));
+});
+
+test("rejects a symbolic-link escape before writing the PDF", async (context) => {
+  const root = await mkdtemp(join(tmpdir(), "support-flow-storage-root-"));
+  const outside = await mkdtemp(join(tmpdir(), "support-flow-storage-outside-"));
+  context.after(async () => {
+    await rm(root, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  });
+  const config: KnowledgeConfig = {
+    storageRoot: root,
+    pdfMaxBytes: 1024,
+    pdfMaxPages: 10,
+    articleMaxCharacters: 100
+  };
+  const storage = new LocalFileStorage(config);
+  const organizationId = randomUUID();
+  await symlink(outside, join(root, "organizations"));
+
+  await assert.rejects(() =>
+    storage.putPdf(
+      { organizationId, familyId: randomUUID(), versionId: randomUUID() },
+      Buffer.from("unsafe")
+    )
+  );
+  await assert.rejects(() => readFile(join(outside, organizationId, "knowledge")));
 });
