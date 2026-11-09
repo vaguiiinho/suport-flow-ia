@@ -7,9 +7,11 @@ import {
   CreateKnowledgeVersionInput,
   CreateKnowledgeVersionOptions,
   IngestionJobRecord,
+  IngestionJobWithSource,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
-  KnowledgeType
+  KnowledgeType,
+  ListIngestionJobsFilter
 } from "../domain/knowledge-repository.port";
 
 @Injectable()
@@ -131,6 +133,25 @@ export class PrismaKnowledgeRepository implements KnowledgeRepositoryPort {
 
   findIngestionJob(organizationId: string, jobId: string): Promise<IngestionJobRecord | null> {
     return this.prisma.ingestionJob.findFirst({ where: { id: jobId, organizationId } });
+  }
+
+  async listIngestionJobs(organizationId: string, filter: ListIngestionJobsFilter): Promise<IngestionJobWithSource[]> {
+    const jobs = await this.prisma.ingestionJob.findMany({
+      where: { organizationId, ...(filter.status ? { status: filter.status } : {}), source: { organizationId } },
+      orderBy: { updatedAt: "desc" },
+      take: filter.limit,
+      include: { source: { select: { familyId: true, title: true, type: true, version: true, deletedAt: true } } }
+    });
+    return jobs.map(({ source, ...job }) => ({
+      ...job,
+      source: {
+        familyId: source.familyId,
+        title: source.title,
+        type: source.type,
+        version: source.version,
+        deleted: source.deletedAt !== null
+      }
+    }));
   }
 
   async softDeleteFamily(organizationId: string, familyId: string, deletedAt: Date): Promise<KnowledgeSourceVersion[]> {

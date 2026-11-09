@@ -7,7 +7,9 @@ import {
   CreateKnowledgeVersionInput,
   CreateKnowledgeVersionOptions,
   IngestionJobRecord,
+  IngestionJobWithSource,
   KNOWLEDGE_REPOSITORY,
+  KnowledgeIndexingStatus,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
   KnowledgeType,
@@ -207,6 +209,17 @@ export class KnowledgeService {
 
   getIngestionJob(context: OrganizationContext, jobId: string): Promise<IngestionJobRecord | null> {
     return this.repository.findIngestionJob(context.organizationId, jobId);
+  }
+
+  async listIngestionJobs(
+    context: OrganizationContext,
+    filter: { status?: KnowledgeIndexingStatus; limit?: number } = {}
+  ): Promise<IngestionJobWithSource[]> {
+    const limit = filter.limit ?? 50;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new InvalidKnowledgeContentError("LIMIT_INVALID", "Limit must be an integer between 1 and 100");
+    }
+    return this.repository.listIngestionJobs(context.organizationId, { status: filter.status, limit });
   }
 
   private async requireType(

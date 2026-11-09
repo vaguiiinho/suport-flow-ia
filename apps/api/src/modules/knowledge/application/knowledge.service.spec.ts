@@ -8,9 +8,11 @@ import {
   CreateKnowledgeVersionInput,
   CreateKnowledgeVersionOptions,
   IngestionJobRecord,
+  IngestionJobWithSource,
   KnowledgeRepositoryPort,
   KnowledgeSourceVersion,
-  KnowledgeType
+  KnowledgeType,
+  ListIngestionJobsFilter
 } from "../domain/knowledge-repository.port";
 import { KnowledgeConfig } from "./knowledge-config";
 import { KnowledgeService } from "./knowledge.service";
@@ -127,6 +129,32 @@ class MemoryRepository implements KnowledgeRepositoryPort {
   findIngestionJob(requestedOrganizationId: string, jobId: string): Promise<IngestionJobRecord | null> {
     return Promise.resolve(
       this.jobs.find((job) => job.organizationId === requestedOrganizationId && job.id === jobId) ?? null
+    );
+  }
+
+  listIngestionJobs(
+    requestedOrganizationId: string,
+    filter: ListIngestionJobsFilter
+  ): Promise<IngestionJobWithSource[]> {
+    return Promise.resolve(
+      this.jobs
+        .filter(
+          (job) => job.organizationId === requestedOrganizationId && (!filter.status || job.status === filter.status)
+        )
+        .slice(0, filter.limit)
+        .map((job) => {
+          const version = this.versions.find((item) => item.id === job.sourceId)!;
+          return {
+            ...job,
+            source: {
+              familyId: version.familyId,
+              title: version.title,
+              type: version.type,
+              version: version.version,
+              deleted: version.deletedAt !== null
+            }
+          };
+        })
     );
   }
 
@@ -288,4 +316,29 @@ test("knowledge lookups do not disclose a family from another organization", asy
   const service = createService(repository);
 
   await assert.rejects(() => service.get(context, otherSource.familyId), { name: "Error" });
+});
+
+test("lists ingestion jobs of the organization filtered by status with a bounded limit", async () => {
+  const repository = new MemoryRepository();
+  const service = createService(repository);
+  const created = await service.createArticle(context, {
+    title: "Billing",
+    content: "Pay by card.",
+    visibility: "PUBLIC"
+  });
+  repository.jobs[0]!.status = "FAILED";
+  repository.jobs[0]!.errorCode = "EMBEDDING_PROVIDER_UNAVAILABLE";
+
+  const failed = await service.listIngestionJobs(context, { status: "FAILED" });
+  assert.equal(failed.length, 1);
+  assert.equal(failed[0]!.source.familyId, created.familyId);
+  assert.equal(failed[0]!.source.title, "Billing");
+
+  assert.equal((await service.listIngestionJobs(context, { status: "SUCCEEDED" })).length, 0);
+  assert.equal(
+    (await service.listIngestionJobs({ ...context, organizationId: randomUUID() }, { status: "FAILED" })).length,
+    0
+  );
+  await assert.rejects(() => service.listIngestionJobs(context, { limit: 0 }), { code: "LIMIT_INVALID" });
+  await assert.rejects(() => service.listIngestionJobs(context, { limit: 101 }), { code: "LIMIT_INVALID" });
 });

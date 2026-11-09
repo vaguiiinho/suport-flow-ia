@@ -79,6 +79,15 @@ export interface KnowledgeVersionWithJob {
   job: IngestionJobRecord;
 }
 
+export interface IngestionJobWithSource extends IngestionJobRecord {
+  source: { familyId: string; title: string; type: KnowledgeType; version: number; deleted: boolean };
+}
+
+export interface ListIngestionJobsFilter {
+  status?: KnowledgeIndexingStatus;
+  limit: number;
+}
+
 export interface KnowledgeRepositoryPort {
   listLatest(organizationId: string, type?: KnowledgeType): Promise<KnowledgeSourceVersion[]>;
   findLatest(organizationId: string, familyId: string): Promise<KnowledgeSourceVersion | null>;
@@ -94,5 +103,6 @@ export interface KnowledgeRepositoryPort {
   ): Promise<KnowledgeVersionWithJob>;
   createReindexJob(input: CreateIngestionJobInput): Promise<IngestionJobRecord>;
   findIngestionJob(organizationId: string, jobId: string): Promise<IngestionJobRecord | null>;
+  listIngestionJobs(organizationId: string, filter: ListIngestionJobsFilter): Promise<IngestionJobWithSource[]>;
   softDeleteFamily(organizationId: string, familyId: string, deletedAt: Date): Promise<KnowledgeSourceVersion[]>;
 }
