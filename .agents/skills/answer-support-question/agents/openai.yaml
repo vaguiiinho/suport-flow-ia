@@ -1,4 +1,0 @@
-interface:
-  display_name: "Responder suporte com fontes"
-  short_description: "RAG autorizado, citações e fallback seguro"
-  default_prompt: "Use $answer-support-question para revisar o fluxo de resposta assistida com fontes e fallback."
