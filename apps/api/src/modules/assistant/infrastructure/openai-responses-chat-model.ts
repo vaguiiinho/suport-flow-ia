@@ -8,7 +8,10 @@ interface ResponsesBody {
 }
 
 export class OpenAiResponsesChatModel implements ChatModelPort {
-  constructor(private readonly config: AssistantConfig, private readonly fetchImplementation: typeof fetch = fetch) {}
+  constructor(
+    private readonly config: AssistantConfig,
+    private readonly fetchImplementation: typeof fetch = fetch
+  ) {}
 
   async answer(input: Parameters<ChatModelPort["answer"]>[0]): Promise<ChatCompletion> {
     if (!this.config.openAiApiKey) throw new Error("Chat provider is not configured");
@@ -74,7 +77,8 @@ export class OpenAiResponsesChatModel implements ChatModelPort {
   private outputText(body: ResponsesBody): string | undefined {
     if (typeof body.output_text === "string") return body.output_text;
     for (const output of body.output ?? []) {
-      for (const content of output.content ?? []) if (content.type === "output_text" && typeof content.text === "string") return content.text;
+      for (const content of output.content ?? [])
+        if (content.type === "output_text" && typeof content.text === "string") return content.text;
     }
     return undefined;
   }

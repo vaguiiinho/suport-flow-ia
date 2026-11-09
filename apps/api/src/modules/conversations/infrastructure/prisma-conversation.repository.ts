@@ -8,7 +8,11 @@ export class PrismaConversationRepository implements ConversationRepositoryPort 
 
   countRecentUserMessages(organizationId: string, conversationId: string, since: Date): Promise<number> {
     return this.prisma.message.count({
-      where: { role: "USER", createdAt: { gte: since }, conversation: { id: conversationId, organizationId, status: "OPEN" } }
+      where: {
+        role: "USER",
+        createdAt: { gte: since },
+        conversation: { id: conversationId, organizationId, status: "OPEN" }
+      }
     });
   }
 
@@ -25,7 +29,12 @@ export class PrismaConversationRepository implements ConversationRepositoryPort 
     });
     if (!conversation) throw new Error("Conversation unavailable");
     const message = await this.prisma.message.create({
-      data: { conversationId: conversation.id, role: input.role, content: input.content, citations: input.citations as never }
+      data: {
+        conversationId: conversation.id,
+        role: input.role,
+        content: input.content,
+        citations: input.citations as never
+      }
     });
     return { ...message, role: message.role as "USER" | "ASSISTANT" };
   }

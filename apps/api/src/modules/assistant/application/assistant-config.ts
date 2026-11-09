@@ -33,7 +33,11 @@ export function readAssistantConfig(environment: NodeJS.ProcessEnv): AssistantCo
     embeddingDimensions: positiveInteger(environment.OPENAI_EMBEDDING_DIMENSIONS, 1536, "OPENAI_EMBEDDING_DIMENSIONS"),
     timeoutMs: positiveInteger(environment.ASSISTANT_TIMEOUT_MS, 15000, "ASSISTANT_TIMEOUT_MS"),
     retrievalLimit: positiveInteger(environment.ASSISTANT_RETRIEVAL_LIMIT, 12, "ASSISTANT_RETRIEVAL_LIMIT"),
-    maxChunksPerSource: positiveInteger(environment.ASSISTANT_MAX_CHUNKS_PER_SOURCE, 2, "ASSISTANT_MAX_CHUNKS_PER_SOURCE"),
+    maxChunksPerSource: positiveInteger(
+      environment.ASSISTANT_MAX_CHUNKS_PER_SOURCE,
+      2,
+      "ASSISTANT_MAX_CHUNKS_PER_SOURCE"
+    ),
     minimumSimilarity,
     promptVersion: environment.ASSISTANT_PROMPT_VERSION?.trim() || "support-answer-v1",
     retrievalStrategyVersion: environment.ASSISTANT_RETRIEVAL_STRATEGY_VERSION?.trim() || "public-cosine-diverse-v1"

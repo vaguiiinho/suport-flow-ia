@@ -25,7 +25,8 @@ export class ConversationService {
       throw new ForbiddenException("Conversation does not belong to this session");
     }
     const content = contentInput.trim();
-    if (!content || content.length > this.config.messageMaxCharacters) throw new BadRequestException("Invalid message content");
+    if (!content || content.length > this.config.messageMaxCharacters)
+      throw new BadRequestException("Invalid message content");
     const since = new Date(Date.now() - this.config.messageRateWindowSeconds * 1000);
     const recent = await this.repository.countRecentUserMessages(context.organizationId, conversationId, since);
     if (recent >= this.config.messageRateLimit) {

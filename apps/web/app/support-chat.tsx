@@ -45,9 +45,14 @@ export function SupportChat() {
         body: JSON.stringify({ content: message })
       });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(typeof body.message === "string" ? body.message : "Não foi possível enviar a mensagem.");
+      if (!response.ok)
+        throw new Error(typeof body.message === "string" ? body.message : "Não foi possível enviar a mensagem.");
       const reply = body.answer as Reply;
-      setMessages((current) => [...current, { role: "USER", content: message }, { role: "ASSISTANT", content: reply.answer, reply }]);
+      setMessages((current) => [
+        ...current,
+        { role: "USER", content: message },
+        { role: "ASSISTANT", content: reply.answer, reply }
+      ]);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Não foi possível enviar a mensagem.");
       setContent(message);
@@ -80,7 +85,8 @@ export function SupportChat() {
         })
       });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(typeof body.message === "string" ? body.message : "Não foi possível criar o chamado.");
+      if (!response.ok)
+        throw new Error(typeof body.message === "string" ? body.message : "Não foi possível criar o chamado.");
       setTicketNumber(body.number as string);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Não foi possível criar o chamado.");
@@ -99,41 +105,101 @@ export function SupportChat() {
         <p>As respostas usam apenas fontes públicas aprovadas.</p>
       </div>
       <div className="messages" aria-live="polite" aria-relevant="additions text">
-        {messages.length === 0 && <p className="empty">Descreva sua dúvida. Se não houver evidência suficiente, você poderá solicitar atendimento humano.</p>}
+        {messages.length === 0 && (
+          <p className="empty">
+            Descreva sua dúvida. Se não houver evidência suficiente, você poderá solicitar atendimento humano.
+          </p>
+        )}
         {messages.map((message, index) => (
           <article className={`message ${message.role.toLowerCase()}`} key={`${message.role}-${index}`}>
             <p className="message-label">{message.role === "USER" ? "Você" : "SupportFlow AI"}</p>
             <p>{message.content}</p>
-            {message.reply?.fallback && <p className="fallback">Esta resposta é um fallback seguro: não completamos lacunas sem fontes.</p>}
+            {message.reply?.fallback && (
+              <p className="fallback">Esta resposta é um fallback seguro: não completamos lacunas sem fontes.</p>
+            )}
             {message.reply && message.reply.citations.length > 0 && (
               <ul className="citations" aria-label="Fontes da resposta">
-                {message.reply.citations.map((citation) => <li key={citation.chunkId}>{citation.title}{citation.page ? ` · página ${citation.page}` : ""}</li>)}
+                {message.reply.citations.map((citation) => (
+                  <li key={citation.chunkId}>
+                    {citation.title}
+                    {citation.page ? ` · página ${citation.page}` : ""}
+                  </li>
+                ))}
               </ul>
             )}
           </article>
         ))}
       </div>
       {messages.some((message) => message.reply?.canOpenTicket) && (
-        <button className="link-button" type="button" onClick={() => setShowEscalation((value) => !value)} aria-expanded={showEscalation}>
+        <button
+          className="link-button"
+          type="button"
+          onClick={() => setShowEscalation((value) => !value)}
+          aria-expanded={showEscalation}
+        >
           {showEscalation ? "Fechar solicitação" : "Solicitar atendimento humano"}
         </button>
       )}
       {showEscalation && (
         <aside className="escalation" aria-labelledby="escalation-title">
           <h3 id="escalation-title">Revise antes de continuar</h3>
-          <p>Revise os dados: resumo, categoria e prioridade são sugestões. O chamado só será criado após sua confirmação abaixo.</p>
+          <p>
+            Revise os dados: resumo, categoria e prioridade são sugestões. O chamado só será criado após sua confirmação
+            abaixo.
+          </p>
           <label htmlFor="contact">E-mail ou telefone para retorno</label>
-          <input id="contact" value={contact} onChange={(event) => setContact(event.target.value)} autoComplete="email" />
-          <label className="confirmation"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /> Confirmo que desejo continuar com a abertura do chamado.</label>
-          {ticketNumber ? <p className="confirmation-state" role="status">Chamado {ticketNumber} criado. Um atendente fará o acompanhamento.</p> : <><p className="confirmation-state" role="status">{confirmed && contact.trim() ? "Pronto para criar o chamado." : "Informe um contato e confirme a solicitação para prosseguir."}</p><button type="button" disabled={!confirmed || !contact.trim() || pending} onClick={createTicket}>{pending ? "Criando chamado…" : "Criar chamado confirmado"}</button></>}
+          <input
+            id="contact"
+            value={contact}
+            onChange={(event) => setContact(event.target.value)}
+            autoComplete="email"
+          />
+          <label className="confirmation">
+            <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />{" "}
+            Confirmo que desejo continuar com a abertura do chamado.
+          </label>
+          {ticketNumber ? (
+            <p className="confirmation-state" role="status">
+              Chamado {ticketNumber} criado. Um atendente fará o acompanhamento.
+            </p>
+          ) : (
+            <>
+              <p className="confirmation-state" role="status">
+                {confirmed && contact.trim()
+                  ? "Pronto para criar o chamado."
+                  : "Informe um contato e confirme a solicitação para prosseguir."}
+              </p>
+              <button type="button" disabled={!confirmed || !contact.trim() || pending} onClick={createTicket}>
+                {pending ? "Criando chamado…" : "Criar chamado confirmado"}
+              </button>
+            </>
+          )}
         </aside>
       )}
       <form className="composer" onSubmit={submit}>
         <label htmlFor="support-message">Sua mensagem</label>
-        <textarea ref={input} id="support-message" value={content} onChange={(event) => setContent(event.target.value)} maxLength={4000} required disabled={pending} rows={3} />
-        <div><span>{content.length}/4000</span><button type="submit" disabled={pending}>{pending ? "Buscando fontes…" : "Enviar mensagem"}</button></div>
+        <textarea
+          ref={input}
+          id="support-message"
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          maxLength={4000}
+          required
+          disabled={pending}
+          rows={3}
+        />
+        <div>
+          <span>{content.length}/4000</span>
+          <button type="submit" disabled={pending}>
+            {pending ? "Buscando fontes…" : "Enviar mensagem"}
+          </button>
+        </div>
       </form>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

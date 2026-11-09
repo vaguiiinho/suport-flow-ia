@@ -7,7 +7,8 @@ import { RetrievalRepositoryPort } from "../domain/retrieval-repository.port";
 type Row = Omit<RetrievedChunk, "similarity"> & { similarity: number };
 
 function vectorLiteral(embedding: number[]): string {
-  if (embedding.length === 0 || embedding.some((item) => !Number.isFinite(item))) throw new Error("Invalid query embedding");
+  if (embedding.length === 0 || embedding.some((item) => !Number.isFinite(item)))
+    throw new Error("Invalid query embedding");
   return `[${embedding.join(",")}]`;
 }
 

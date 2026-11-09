@@ -10,7 +10,16 @@ import { TicketsModule } from "./modules/tickets/tickets.module";
 import { RequestIdMiddleware } from "./shared/observability/request-id.middleware";
 
 @Module({
-  imports: [PrismaModule, HealthModule, AuthModule, KnowledgeModule, IngestionModule, AssistantModule, ConversationsModule, TicketsModule],
+  imports: [
+    PrismaModule,
+    HealthModule,
+    AuthModule,
+    KnowledgeModule,
+    IngestionModule,
+    AssistantModule,
+    ConversationsModule,
+    TicketsModule
+  ],
   providers: [RequestIdMiddleware]
 })
 export class AppModule implements NestModule {

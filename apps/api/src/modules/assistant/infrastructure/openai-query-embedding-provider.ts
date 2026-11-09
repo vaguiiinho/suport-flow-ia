@@ -7,7 +7,10 @@ interface EmbeddingResponse {
 }
 
 export class OpenAiQueryEmbeddingProvider implements QueryEmbeddingProviderPort {
-  constructor(private readonly config: AssistantConfig, private readonly fetchImplementation: typeof fetch = fetch) {}
+  constructor(
+    private readonly config: AssistantConfig,
+    private readonly fetchImplementation: typeof fetch = fetch
+  ) {}
 
   async embed(text: string): Promise<{ embedding: number[]; model: string; dimensions: number }> {
     if (!this.config.openAiApiKey) throw new Error("Embedding provider is not configured");
@@ -30,7 +33,8 @@ export class OpenAiQueryEmbeddingProvider implements QueryEmbeddingProviderPort 
     if (!response.ok) throw new Error("Embedding provider rejected the request");
     const body = (await response.json()) as EmbeddingResponse;
     const entry = body.data?.find((item) => item.index === 0) ?? body.data?.[0];
-    if (typeof body.model !== "string" || !Array.isArray(entry?.embedding)) throw new Error("Invalid embedding response");
+    if (typeof body.model !== "string" || !Array.isArray(entry?.embedding))
+      throw new Error("Invalid embedding response");
     const embedding = entry.embedding.map(Number);
     if (embedding.length !== this.config.embeddingDimensions || embedding.some((item) => !Number.isFinite(item))) {
       throw new Error("Invalid embedding response");

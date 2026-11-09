@@ -22,7 +22,8 @@ export class AssistantService {
     if (!question) return this.fallback();
     try {
       const query = await this.embeddings.embed(question);
-      if (query.model !== this.config.embeddingModel || query.dimensions !== this.config.embeddingDimensions) return this.fallback();
+      if (query.model !== this.config.embeddingModel || query.dimensions !== this.config.embeddingDimensions)
+        return this.fallback();
       const candidates = await this.repository.searchPublic({
         organizationId: context.organizationId,
         embedding: query.embedding,
@@ -32,7 +33,10 @@ export class AssistantService {
       });
       const selected = this.diversify(candidates);
       if (selected.length === 0 || selected[0]!.similarity < this.config.minimumSimilarity) return this.fallback();
-      const authorized = await this.repository.revalidatePublic(context.organizationId, selected.map((chunk) => chunk.id));
+      const authorized = await this.repository.revalidatePublic(
+        context.organizationId,
+        selected.map((chunk) => chunk.id)
+      );
       const verified = selected.filter((chunk) => authorized.some((allowed) => allowed.id === chunk.id));
       if (verified.length === 0) return this.fallback();
       const completion = await this.chat.answer({ instructions: this.instructions(), question, chunks: verified });

@@ -4,3 +4,5 @@ dist
 coverage
 package-lock.json
 apps/api/prisma/migrations
+CLAUDE.md
+.claude
