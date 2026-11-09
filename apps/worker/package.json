@@ -8,7 +8,8 @@
     "start": "node dist/main.js",
     "lint": "eslint .",
     "test": "node --import tsx --test src/health.spec.ts src/ingestion/chunker.spec.ts src/ingestion/ingestion-worker.spec.ts src/infrastructure/openai-embedding-provider.spec.ts",
-    "test:integration": "node --import tsx --test src/ingestion/postgres-ingestion.integration.spec.ts"
+    "test:integration": "node --import tsx --test src/ingestion/postgres-ingestion.integration.spec.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@support-flow/shared": "*",
