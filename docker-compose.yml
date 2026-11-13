@@ -24,6 +24,7 @@ services:
     logging: *default-logging
 
   api:
+    image: ${DOCKER_HUB_USERNAME:-local}/suport-flow-ia-api:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -65,6 +66,7 @@ services:
     logging: *default-logging
 
   worker:
+    image: ${DOCKER_HUB_USERNAME:-local}/suport-flow-ia-worker:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
@@ -105,11 +107,12 @@ services:
     logging: *default-logging
 
   web:
+    image: ${DOCKER_HUB_USERNAME:-local}/suport-flow-ia-web:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-3001}/api/v1
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api/v1}
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-3001}/api/v1
       NODE_OPTIONS: --max-old-space-size=224
@@ -127,6 +130,43 @@ services:
     restart: unless-stopped
     mem_limit: 320m
     cpus: 0.50
+    logging: *default-logging
+
+  nginx:
+    image: nginx:alpine
+    environment:
+      NGINX_PORT: ${NGINX_PORT:-80}
+      NGINX_HTTPS_PORT: ${NGINX_HTTPS_PORT:-443}
+    ports:
+      - "${NGINX_PORT:-80}:${NGINX_PORT:-80}"
+      - "${NGINX_HTTPS_PORT:-443}:${NGINX_HTTPS_PORT:-443}"
+    volumes:
+      - type: bind
+        source: ./nginx/default.conf
+        target: /etc/nginx/templates/default.conf.template
+        read_only: true
+      - type: bind
+        source: ./nginx/certbot/fullchain.pem
+        target: /etc/nginx/certs/fullchain.pem
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./nginx/certbot/privkey.pem
+        target: /etc/nginx/certs/privkey.pem
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 64m
+    cpus: 0.25
     logging: *default-logging
 
 volumes:

@@ -11,5 +11,6 @@ apps/*/.env.*
 !apps/*/.env.example
 uploads/
 apps/api/uploads/
+/nginx/certbot/
 *.log
 .DS_Store
